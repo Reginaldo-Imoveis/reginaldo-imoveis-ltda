@@ -1,0 +1,30 @@
+node_modules/
+
+# Secrets e dados sensíveis
+.env
+backend/.totp-secret.json
+backend/database.sqlite
+
+# Build output (gerado por npm run build)
+frontend/dist/
+
+# Logs
+logs/
+*.log
+
+# Uploads de usuários
+uploads/
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Claude Code
+.claude/
