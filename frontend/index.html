@@ -72,6 +72,12 @@
 
     <!-- Canonical -->
     <link rel="canonical" href="https://www.reginaldoimoveis.com.br/">
+
+    <!-- PWA -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#C4A26B">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 </head>
 <body>
 
@@ -85,12 +91,20 @@
             </a>
             <nav class="nav-links">
                 <a href="/" class="active"><span>Início</span></a>
-                <a href="#imoveis"><span>Imóveis</span></a>
-                <a href="#sobre"><span>Sobre</span></a>
-                <a href="#captacao"><span>Encontre seu Imóvel</span></a>
+                <div class="nav-dropdown">
+                    <button class="nav-dropdown-trigger">
+                        <span>Imóveis</span>
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+                    </button>
+                    <div class="nav-dropdown-menu">
+                        <a href="#imoveis">Ver imóveis</a>
+                        <a href="#captacao">Encontre seu imóvel</a>
+                        <a href="#sobre">Sobre nós</a>
+                    </div>
+                </div>
                 <a href="/contato"><span>Contato</span></a>
             </nav>
-            <a href="https://wa.me/5511953280353?text=Olá!%20Vim%20pelo%20site%20e%20gostaria%20de%20saber%20mais%20sobre%20os%20imóveis%20disponíveis.%20Podem%20me%20ajudar?" target="_blank" class="btn btn-primary btn-sm nav-cta">
+            <a href="https://wa.me/5511953280353?text=Olá!%20Vim%20pelo%20site%20e%20gostaria%20de%20saber%20mais%20sobre%20os%20imóveis%20disponíveis.%20Podem%20me%20ajudar?" target="_blank" rel="noopener noreferrer" class="btn btn-outline-gold btn-sm nav-cta">
                 Falar com especialista
             </a>
             <button class="mobile-search-btn" aria-label="Buscar" id="mobile-search-toggle">
@@ -107,7 +121,7 @@
          ============================================================ -->
     <section class="hero">
         <div class="hero-bg">
-            <img src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?ixlib=rb-4.0.3&auto=format&fit=crop&w=2400&q=85" alt="Imóvel de Alto Padrão">
+            <img src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?ixlib=rb-4.0.3&auto=format&fit=crop&w=2400&q=85" alt="Imóvel de Alto Padrão" fetchpriority="high" decoding="async">
         </div>
         <div class="hero-overlay"></div>
 
@@ -118,6 +132,10 @@
             </div>
             <h1>O endereço certo<br>para sua <em>próxima conquista.</em></h1>
             <p class="hero-sub">Curadoria de imóveis exclusivos com a confiança de quem entende o mercado paulistano. Atendimento sob medida, do primeiro contato à chave na mão.</p>
+            <div class="hero-ctas">
+                <a href="#imoveis" class="btn btn-primary">Ver imóveis disponíveis</a>
+                <a href="https://wa.me/5511953280353?text=Olá!%20Vim%20pelo%20site%20e%20gostaria%20de%20saber%20mais%20sobre%20os%20imóveis%20disponíveis.%20Podem%20me%20ajudar?" target="_blank" rel="noopener noreferrer" class="btn btn-outline-light">Falar com especialista</a>
+            </div>
 
             <div class="search-bar">
                 <div class="field">
@@ -168,10 +186,6 @@
             </div>
         </div>
 
-        <div class="scroll-hint">
-            <span>Explorar</span>
-            <span class="line"></span>
-        </div>
     </section>
 
     <!-- MARQUEE BELT -->
@@ -216,9 +230,7 @@
                     <button class="chip active" data-tipo="todos">Todos</button>
                     <button class="chip" data-tipo="Apartamento">Apartamento</button>
                     <button class="chip" data-tipo="Casa">Casa</button>
-                    <button class="chip" data-tipo="Sobrado">Sobrado</button>
                     <button class="chip" data-tipo="Comercial">Comercial</button>
-                    <button class="chip" data-tipo="Cobertura">Cobertura</button>
                 </div>
                 <a href="/contato" class="btn btn-ghost btn-sm">
                     Curadoria personalizada
@@ -228,6 +240,13 @@
 
             <div class="grid-imoveis" id="grid-imoveis">
                 <p style="text-align:center; grid-column:1/-1; color:var(--c-text-mute);">Carregando imóveis…</p>
+            </div>
+            <div class="carousel-dots" id="carousel-dots"></div>
+            <div style="text-align:center; margin-top:48px;">
+                <a href="/imoveis" class="btn btn-ghost">
+                    Ver todos os imóveis
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                </a>
             </div>
         </div>
     </section>
@@ -387,6 +406,11 @@
                             </div>
                         </div>
 
+                        <div style="position:absolute;left:-9999px" aria-hidden="true">
+                            <label for="cap-website">Website</label>
+                            <input type="text" id="cap-website" name="website" tabindex="-1" autocomplete="off">
+                        </div>
+
                         <div class="cap-success" id="cap-success-inline">
                             <div class="cap-success-icon">
                                 <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
@@ -494,7 +518,7 @@
                 <h2 class="section-title">Vamos encontrar<br>o seu <em>próximo lar</em>.</h2>
                 <p>Fale com um especialista agora mesmo e receba uma seleção personalizada de imóveis que combinam com o seu estilo de vida.</p>
                 <div class="cta-actions">
-                    <a href="https://wa.me/5511953280353?text=Olá!%20Vim%20pelo%20site%20e%20gostaria%20de%20saber%20mais%20sobre%20os%20imóveis%20disponíveis.%20Podem%20me%20ajudar?" target="_blank" class="btn btn-primary btn-lg">
+                    <a href="https://wa.me/5511953280353?text=Olá!%20Vim%20pelo%20site%20e%20gostaria%20de%20saber%20mais%20sobre%20os%20imóveis%20disponíveis.%20Podem%20me%20ajudar?" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-lg">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/></svg>
                         Quero atendimento personalizado
                     </a>
@@ -525,8 +549,8 @@
                     </a>
                     <p class="footer-brand-text">Curadoria de imóveis exclusivos em São Paulo. Tradição familiar com visão moderna, atendendo com excelência desde 1998.</p>
                     <div class="footer-social">
-                        <a href="https://www.instagram.com/imoveisreginaldo?igsh=MTA3NTJvMHFtMjh0dw==" target="_blank" aria-label="Instagram"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg></a>
-                        <a href="https://wa.me/5511953280353" aria-label="WhatsApp" target="_blank"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347"/></svg></a>
+                        <a href="https://www.instagram.com/imoveisreginaldo?igsh=MTA3NTJvMHFtMjh0dw==" target="_blank" rel="noopener noreferrer" aria-label="Instagram"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg></a>
+                        <a href="https://wa.me/5511953280353" aria-label="WhatsApp" target="_blank" rel="noopener noreferrer"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347"/></svg></a>
                     </div>
                 </div>
                 <div class="footer-col">
@@ -542,7 +566,7 @@
                     <p>Av. Sapopemba, 3320</p>
                     <p>Vila Regente Feijó</p>
                     <p>São Paulo / SP · 03345-000</p>
-                    <p><a href="https://wa.me/5511953280353" target="_blank">(11) 95328-0353</a></p>
+                    <p><a href="https://wa.me/5511953280353" target="_blank" rel="noopener noreferrer">(11) 95328-0353</a></p>
                 </div>
                 <div class="footer-col">
                     <h4>Institucional</h4>
@@ -553,7 +577,7 @@
                 </div>
             </div>
             <div class="footer-bottom">
-                <span>&copy; 1998 Reginaldo Imóveis. <a href="/admin" style="color:inherit;text-decoration:none;cursor:default;">Todos os direitos reservados.</a></span>
+                <span>&copy; 1998 Reginaldo Imóveis. Todos os direitos reservados.</span>
                 <span>Desenvolvido com cuidado em São Paulo.</span>
             </div>
         </div>
@@ -570,7 +594,8 @@
     </div>
 
     <script src="/js/tracker.js" defer></script>
-    <script src="/js/main.js"></script>
+    <script src="/js/main.js" defer></script>
+    <script>if('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');</script>
     <script>
     (function() {
         var consent = localStorage.getItem('lgpd_consent');

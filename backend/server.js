@@ -32,6 +32,7 @@ const logger = winston.createLogger({
 });
 
 const fs = require('fs');
+const crypto = require('crypto');
 const logsDir = path.join(__dirname, '../logs');
 if (!fs.existsSync(logsDir)) fs.mkdirSync(logsDir, { recursive: true });
 
@@ -51,22 +52,30 @@ const HIGH_TICKET_THRESHOLD = 1500000;
 const SITE_URL = process.env.SITE_URL || 'https://www.reginaldoimoveis.com.br';
 
 // ============================================================
-//  2FA (TOTP) — estado persistido em arquivo simples
+//  2FA (TOTP) — estado persistido no banco de dados
 // ============================================================
-const TOTP_FILE = path.join(__dirname, '.totp-secret.json');
+let totpConfig = { secret: null, enabled: false };
 
-function loadTotpConfig() {
-    try {
-        if (fs.existsSync(TOTP_FILE)) return JSON.parse(fs.readFileSync(TOTP_FILE, 'utf-8'));
-    } catch (e) { logger.error(`Erro ao ler TOTP config: ${e.message}`); }
-    return { secret: null, enabled: false };
+function loadTotpConfigFromDb() {
+    return new Promise((resolve) => {
+        db.get(`SELECT value FROM app_config WHERE key = 'totp'`, (err, row) => {
+            if (err) { logger.error(`Erro ao ler TOTP config: ${err.message}`); resolve(); return; }
+            if (row) {
+                try { totpConfig = JSON.parse(row.value); } catch (e) { logger.error('TOTP config corrompida no banco'); }
+            }
+            resolve();
+        });
+    });
 }
 
 function saveTotpConfig(config) {
-    fs.writeFileSync(TOTP_FILE, JSON.stringify(config, null, 2), 'utf-8');
+    totpConfig = config;
+    db.run(
+        `INSERT OR REPLACE INTO app_config (key, value) VALUES ('totp', ?)`,
+        [JSON.stringify(config)],
+        (err) => { if (err) logger.error(`Erro ao salvar TOTP config: ${err.message}`); }
+    );
 }
-
-let totpConfig = loadTotpConfig();
 
 function verifyTotp(code) {
     if (!totpConfig.enabled || !totpConfig.secret) return true;
@@ -76,9 +85,31 @@ function verifyTotp(code) {
 }
 
 // ============================================================
-//  REFRESH TOKEN — blacklist de tokens revogados
+//  REFRESH TOKEN — blacklist persistida no banco
 // ============================================================
-const revokedRefreshTokens = new Set();
+const REFRESH_TTL_MS = 7 * 24 * 60 * 60 * 1000;
+
+function hashToken(token) {
+    return crypto.createHash('sha256').update(token).digest('hex');
+}
+
+function revokeToken(token) {
+    const hash = hashToken(token);
+    const expiresAt = Date.now() + REFRESH_TTL_MS;
+    db.run(`INSERT OR IGNORE INTO revoked_tokens (token_hash, expires_at) VALUES (?, ?)`, [hash, expiresAt],
+        (err) => { if (err) logger.error(`Erro ao revogar token: ${err.message}`); }
+    );
+}
+
+function isTokenRevoked(token) {
+    return new Promise((resolve) => {
+        const hash = hashToken(token);
+        db.get(`SELECT 1 FROM revoked_tokens WHERE token_hash = ? AND expires_at > ?`,
+            [hash, Date.now()],
+            (err, row) => resolve(!!row)
+        );
+    });
+}
 
 // ============================================================
 //  IN-MEMORY CACHE (substitui Redis para este porte)
@@ -144,10 +175,14 @@ app.use(helmet({
         directives: {
             defaultSrc: ["'self'"],
             scriptSrc: ["'self'", "'unsafe-inline'"],
+            // Helmet v7 define script-src-attr como 'none' por padrão, o que bloqueia
+            // todos os onclick="" inline. Definir explicitamente resolve o problema.
+            scriptSrcAttr: ["'unsafe-inline'"],
             styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
             fontSrc: ["'self'", "https://fonts.gstatic.com"],
             imgSrc: ["'self'", "data:", "https:", "blob:"],
-            connectSrc: ["'self'"],
+            // Inclui unsplash e cdnjs para imagens de fallback e bibliotecas externas
+            connectSrc: ["'self'", "https://images.unsplash.com", "https://cdnjs.cloudflare.com"],
             frameSrc: ["'self'", "https://www.google.com"],
             objectSrc: ["'none'"],
             baseUri: ["'self'"],
@@ -185,6 +220,7 @@ if (fs.existsSync(distPath)) {
 }
 app.use(express.static(path.join(__dirname, '../frontend'), {
     maxAge: '1d',
+    extensions: ['html'],
     setHeaders: (res, filePath) => {
         if (filePath.endsWith('.html')) res.setHeader('Cache-Control', 'no-cache');
         if (/\.(js|css)$/.test(filePath)) res.setHeader('Cache-Control', 'public, max-age=86400');
@@ -276,9 +312,16 @@ function validateMagicBytes(filePath, mimetype) {
     } catch { return false; }
 }
 
+// Garante que o diretório de uploads existe
+const uploadsDir = path.join(__dirname, '../uploads');
+if (!fs.existsSync(uploadsDir)) {
+    fs.mkdirSync(uploadsDir, { recursive: true });
+    logger.info('Diretório de uploads criado automaticamente.');
+}
+
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        cb(null, path.join(__dirname, '../uploads/'));
+        cb(null, uploadsDir + '/');
     },
     filename: (req, file, cb) => {
         const ext = path.extname(file.originalname).toLowerCase();
@@ -392,14 +435,14 @@ app.post('/api/auth', authLimiter, [
 });
 
 // Refresh token — gera novo access token
-app.post('/api/auth/refresh', (req, res) => {
+app.post('/api/auth/refresh', async (req, res) => {
     const refreshToken = req.cookies?.refreshToken || req.body?.refreshToken;
 
     if (!refreshToken) {
         return res.status(401).json({ error: 'Refresh token não fornecido' });
     }
 
-    if (revokedRefreshTokens.has(refreshToken)) {
+    if (await isTokenRevoked(refreshToken)) {
         logger.warn(`REFRESH TOKEN REVOGADO — IP: ${req.ip}`);
         return res.status(403).json({ error: 'Token revogado' });
     }
@@ -426,7 +469,7 @@ app.post('/api/auth/logout', (req, res) => {
     if (refreshToken) {
         try {
             jwt.verify(refreshToken, REFRESH_SECRET);
-            revokedRefreshTokens.add(refreshToken);
+            revokeToken(refreshToken);
         } catch (e) { /* token inválido, ignora */ }
     }
     res.clearCookie('accessToken', { path: '/' });
@@ -877,6 +920,23 @@ app.get('/api/tracking/stats', authMiddleware, (req, res) => {
     });
 });
 
+app.get('/api/tracking/analytics', authMiddleware, (req, res) => {
+    const days = Math.min(parseInt(req.query.days) || 30, 365);
+    db.all(
+        `SELECT t.imovel_id, i.titulo, COUNT(*) as views
+         FROM leads_tracking t
+         LEFT JOIN imoveis i ON i.id = t.imovel_id
+         WHERE t.evento = 'property_view' AND t.imovel_id IS NOT NULL
+           AND t.criado_em >= datetime('now', '-' || ? || ' days')
+         GROUP BY t.imovel_id ORDER BY views DESC LIMIT 10`,
+        [days],
+        (err, rows) => {
+            if (err) return res.status(500).json({ error: 'Erro interno' });
+            res.json({ topProperties: rows || [] });
+        }
+    );
+});
+
 // ============================================================
 //  SEO: SITEMAP.XML DINÂMICO
 // ============================================================
@@ -1016,7 +1076,38 @@ app.use((err, req, res, next) => {
 // ============================================================
 //  START
 // ============================================================
-app.listen(PORT, () => {
-    logger.info(`Servidor rodando na porta ${PORT}`);
-    logger.info(`Acesse http://localhost:${PORT}`);
-});
+const { runBackup } = require('./backup');
+
+async function startServer() {
+    await loadTotpConfigFromDb();
+    logger.info(`2FA status: ${totpConfig.enabled ? 'ativado' : 'desativado'}`);
+
+    app.listen(PORT, () => {
+        logger.info(`Servidor rodando na porta ${PORT}`);
+        logger.info(`Acesse http://localhost:${PORT}`);
+    });
+
+    // Backup diário às 03:00
+    scheduleDailyAt(3, 0, () => {
+        logger.info('Iniciando backup agendado...');
+        runBackup(logger);
+    });
+
+    // Limpeza de tokens expirados — a cada 6 horas
+    setInterval(() => {
+        db.run(`DELETE FROM revoked_tokens WHERE expires_at <= ?`, [Date.now()],
+            (err) => { if (err) logger.error(`Erro na limpeza de tokens: ${err.message}`); }
+        );
+    }, 6 * 60 * 60 * 1000);
+}
+
+function scheduleDailyAt(hour, minute, fn) {
+    const now = new Date();
+    const next = new Date(now);
+    next.setHours(hour, minute, 0, 0);
+    if (next <= now) next.setDate(next.getDate() + 1);
+    const delay = next - now;
+    setTimeout(() => { fn(); setInterval(fn, 24 * 60 * 60 * 1000); }, delay);
+}
+
+startServer();

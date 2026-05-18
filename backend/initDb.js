@@ -113,6 +113,36 @@ const initDatabase = () => {
             }
         });
 
+        // Tabela de configuração da aplicação (TOTP, etc.)
+        db.run(`
+            CREATE TABLE IF NOT EXISTS app_config (
+                key TEXT PRIMARY KEY,
+                value TEXT NOT NULL
+            )
+        `, (err) => {
+            if (err) console.error('Erro ao criar tabela app_config:', err.message);
+        });
+
+        // Tabela de refresh tokens revogados (blacklist persistente)
+        db.run(`
+            CREATE TABLE IF NOT EXISTS revoked_tokens (
+                token_hash TEXT PRIMARY KEY,
+                expires_at INTEGER NOT NULL
+            )
+        `, (err) => {
+            if (err) console.error('Erro ao criar tabela revoked_tokens:', err.message);
+        });
+
+        // Índices para consultas frequentes
+        db.run(`CREATE INDEX IF NOT EXISTS idx_imoveis_tipo ON imoveis(tipo)`);
+        db.run(`CREATE INDEX IF NOT EXISTS idx_imoveis_finalidade ON imoveis(finalidade)`);
+        db.run(`CREATE INDEX IF NOT EXISTS idx_imoveis_status ON imoveis(status)`);
+        db.run(`CREATE INDEX IF NOT EXISTS idx_imoveis_preco ON imoveis(preco)`);
+        db.run(`CREATE INDEX IF NOT EXISTS idx_imoveis_destaque ON imoveis(destaque)`);
+        db.run(`CREATE INDEX IF NOT EXISTS idx_leads_status ON leads_imobiliaria(status)`);
+        db.run(`CREATE INDEX IF NOT EXISTS idx_tracking_session ON leads_tracking(session_id)`);
+        db.run(`CREATE INDEX IF NOT EXISTS idx_revoked_expires ON revoked_tokens(expires_at)`);
+
         // Inserir dados iniciais (seed) extraídos do site
         const checkQuery = `SELECT count(*) as count FROM imoveis`;
         db.get(checkQuery, (err, row) => {

@@ -5,6 +5,7 @@
 document.addEventListener('DOMContentLoaded', () => {
     initHeaderScroll();
     initMobileMenu();
+    initNavDropdown();
     initMobileSearch();
     initReveal();
     initCounters();
@@ -19,13 +20,39 @@ function initMobileMenu() {
     const btn = document.querySelector('.mobile-menu-btn');
     const nav = document.querySelector('.nav-links');
     if (!btn || !nav) return;
+
+    const closeMenu = () => {
+        nav.classList.remove('open');
+        btn.setAttribute('aria-expanded', 'false');
+    };
+
     btn.addEventListener('click', () => {
         nav.classList.toggle('open');
         btn.setAttribute('aria-expanded', nav.classList.contains('open'));
     });
+
+    nav.querySelectorAll('a').forEach(link => {
+        link.addEventListener('click', closeMenu);
+    });
+
     document.addEventListener('click', (e) => {
         if (!btn.contains(e.target) && !nav.contains(e.target)) {
-            nav.classList.remove('open');
+            closeMenu();
+        }
+    });
+}
+
+function initNavDropdown() {
+    const trigger = document.querySelector('.nav-dropdown-trigger');
+    const dropdown = document.querySelector('.nav-dropdown');
+    if (!trigger || !dropdown) return;
+    trigger.addEventListener('click', (e) => {
+        e.stopPropagation();
+        dropdown.classList.toggle('open');
+    });
+    document.addEventListener('click', (e) => {
+        if (!dropdown.contains(e.target)) {
+            dropdown.classList.remove('open');
         }
     });
 }
@@ -103,6 +130,7 @@ function initHeaderScroll() {
 
 // REVEAL on scroll
 function initReveal() {
+    document.documentElement.classList.add('js-ready');
     const obs = new IntersectionObserver((entries) => {
         entries.forEach(e => {
             if (e.isIntersecting) {
@@ -110,7 +138,7 @@ function initReveal() {
                 obs.unobserve(e.target);
             }
         });
-    }, { threshold: 0.1 });
+    }, { threshold: 0.05, rootMargin: '0px 0px 200px 0px' });
     document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
 }
 
@@ -118,6 +146,7 @@ function initReveal() {
 let currentTipo = 'todos';
 let currentBusca = '';
 let currentFaixa = 'todos';
+let imoveisLoadedCache = [];
 
 function initFilterChips() {
     const chips = document.querySelectorAll('#filter-chips .chip');
@@ -177,7 +206,17 @@ async function carregarImoveis() {
     const grid = document.getElementById('grid-imoveis');
     if (!grid) return;
 
-    grid.innerHTML = `<p style="text-align:center; grid-column:1/-1; color: var(--c-text-mute);">Carregando imóveis…</p>`;
+    grid.innerHTML = Array.from({ length: 4 }, () => `
+        <article class="imovel-card skeleton-card">
+            <div class="skeleton-img"></div>
+            <div class="imovel-info">
+                <div class="skeleton-line" style="width:40%;height:12px;margin-bottom:10px"></div>
+                <div class="skeleton-line" style="width:75%;height:18px;margin-bottom:14px"></div>
+                <div class="skeleton-line" style="width:60%;height:12px;margin-bottom:20px"></div>
+                <div class="skeleton-line" style="width:50%;height:22px"></div>
+            </div>
+        </article>
+    `).join('');
 
     try {
         let url = `/api/imoveis?tipo=${encodeURIComponent(currentTipo)}`;
@@ -186,6 +225,7 @@ async function carregarImoveis() {
         const res = await fetch(url);
         const json = await res.json();
         let imoveis = Array.isArray(json) ? json : (json.data || []);
+        imoveisLoadedCache = imoveis;
 
         // Filtro de faixa de preço (client-side)
         if (currentFaixa && currentFaixa !== 'todos') {
@@ -194,6 +234,7 @@ async function carregarImoveis() {
         }
 
         grid.innerHTML = '';
+        imoveis = imoveis.slice(0, 6);
 
         if (!imoveis.length) {
             grid.innerHTML = `
@@ -208,9 +249,22 @@ async function carregarImoveis() {
 
         imoveis.forEach(imovel => grid.appendChild(criarCard(imovel)));
         atualizarBotoesFavoritos();
+        initCarouselDots(grid, imoveis.length);
     } catch (err) {
-        console.error('Erro ao carregar imóveis:', err);
-        grid.innerHTML = `<p style="text-align:center; grid-column:1/-1; color: #FF8B8B;">Erro ao carregar imóveis.</p>`;
+        const isOffline = err instanceof TypeError && err.message.toLowerCase().includes('fetch');
+        const msg = isOffline
+            ? 'O servidor não está em execução. Inicie com <code style="background:rgba(255,255,255,0.08);padding:2px 6px;border-radius:3px;">npm start</code> e atualize a página.'
+            : 'Verifique sua conexão e tente novamente.';
+        grid.innerHTML = `
+            <div style="grid-column:1/-1; text-align:center; padding: 60px 20px; color: var(--c-text-mute);">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#FF8B8B" stroke-width="1.5" style="margin-bottom: 16px;">
+                    <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+                </svg>
+                <h4 style="font-family: var(--font-display); font-size: 1.5rem; color: var(--c-text); margin-bottom: 8px;">Não foi possível carregar os imóveis</h4>
+                <p style="margin-bottom: 20px;">${msg}</p>
+                <button onclick="carregarImoveis()" style="background: var(--c-gold); color: #000; border: none; padding: 12px 28px; border-radius: 4px; cursor: pointer; font-weight: 600;">Tentar novamente</button>
+            </div>
+        `;
     }
 }
 
@@ -240,15 +294,6 @@ function criarCard(imovel) {
 
     const imgUrl = imovel.imagem || 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=800&auto=format';
 
-    function buildSrcset(src) {
-        if (!src || src.startsWith('http')) return '';
-        const ext = src.match(/\.(jpg|jpeg|png)$/i);
-        if (!ext) return '';
-        const base = src.replace(/\.(jpg|jpeg|png)$/i, '');
-        return `srcset="${base}-400w.webp 400w, ${base}-800w.webp 800w, ${base}-1200w.webp 1200w" sizes="(max-width: 768px) 100vw, 400px" type="image/webp"`;
-    }
-
-    const srcset = buildSrcset(imovel.imagem);
     const card = document.createElement('article');
     card.className = 'imovel-card card-enter';
     card.innerHTML = `
@@ -257,14 +302,11 @@ function criarCard(imovel) {
             <span class="badge-finalidade ${finalidade === 'Locação' ? 'locacao' : 'venda'}">${finalidade}</span>
             ${statusHtml}
             ${proofTag}
-            <button class="btn-fav" title="Adicionar aos favoritos" onclick="toggleFavorito(event, ${imovel.id})">
+            <button class="btn-fav" title="Adicionar aos favoritos" aria-label="Adicionar aos favoritos" onclick="toggleFavorito(event, ${imovel.id})">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
             </button>
             <a href="${detalhesUrl}" style="display:block; width:100%; height:100%;">
-                <picture>
-                    ${srcset ? `<source ${srcset}>` : ''}
-                    <img class="imovel-img" src="${imgUrl}" alt="${imovel.titulo}" loading="lazy" decoding="async" onerror="this.src='https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=800&auto=format'">
-                </picture>
+                <img class="imovel-img" src="${imgUrl}" alt="${imovel.titulo}" loading="lazy" decoding="async" onerror="this.src='https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=800&auto=format'">
             </a>
         </div>
         <div class="imovel-info">
@@ -292,12 +334,50 @@ function criarCard(imovel) {
     return card;
 }
 
-// ===== FAVORITOS =====
+// ===== FAVORITOS (com cache offline) =====
 function getFavoritos() {
     try {
         const favs = localStorage.getItem('reginaldo_favoritos');
         return favs ? JSON.parse(favs) : [];
     } catch { return []; }
+}
+
+function getFavoritosData() {
+    try {
+        const data = localStorage.getItem('reginaldo_favoritos_data');
+        return data ? JSON.parse(data) : {};
+    } catch { return {}; }
+}
+
+function saveFavoritoData(id, imovel) {
+    const data = getFavoritosData();
+    data[id] = {
+        id: imovel.id,
+        titulo: imovel.titulo,
+        tipo: imovel.tipo,
+        preco: imovel.preco,
+        quartos: imovel.quartos,
+        vagas: imovel.vagas,
+        areaUtil: imovel.areaUtil,
+        imagem: imovel.imagem,
+        finalidade: imovel.finalidade,
+        status: imovel.status,
+        slug: imovel.slug,
+        cachedAt: Date.now()
+    };
+    localStorage.setItem('reginaldo_favoritos_data', JSON.stringify(data));
+
+    if ('caches' in window && imovel.imagem) {
+        caches.open('ri-images-v1').then(cache => {
+            cache.add(imovel.imagem).catch(() => {});
+        });
+    }
+}
+
+function removeFavoritoData(id) {
+    const data = getFavoritosData();
+    delete data[id];
+    localStorage.setItem('reginaldo_favoritos_data', JSON.stringify(data));
 }
 
 function toggleFavorito(event, id) {
@@ -310,9 +390,12 @@ function toggleFavorito(event, id) {
     if (favs.includes(id)) {
         favs = favs.filter(f => f !== id);
         btn.classList.remove('active');
+        removeFavoritoData(id);
     } else {
         favs.push(id);
         btn.classList.add('active');
+        const imovelData = imoveisLoadedCache.find(i => i.id === id);
+        if (imovelData) saveFavoritoData(id, imovelData);
     }
     localStorage.setItem('reginaldo_favoritos', JSON.stringify(favs));
 }
@@ -373,10 +456,29 @@ function initCaptacaoInline() {
         this.value = v;
     });
 
+    const BTN_DEFAULT_TEXT = 'Receber imóveis exclusivos';
+
     function setLoading(loading) {
         btnSubmit.disabled = loading;
-        btnText.textContent = loading ? 'Enviando…' : 'Encontrar meu Imóvel';
+        btnText.textContent = loading ? 'Enviando…' : BTN_DEFAULT_TEXT;
         btnSpinner.style.display = loading ? 'block' : 'none';
+    }
+
+    function showFormError(msg) {
+        let errEl = form.querySelector('.cap-form-error-msg');
+        if (!errEl) {
+            errEl = document.createElement('p');
+            errEl.className = 'cap-form-error-msg';
+            errEl.style.cssText = 'text-align:center;font-size:0.875rem;color:#FF8B8B;margin-top:12px;margin-bottom:0;font-weight:500;';
+            btnSubmit.parentNode.insertBefore(errEl, btnSubmit);
+        }
+        errEl.textContent = msg;
+        errEl.style.display = 'block';
+    }
+
+    function hideFormError() {
+        const errEl = form.querySelector('.cap-form-error-msg');
+        if (errEl) errEl.style.display = 'none';
     }
 
     function showSuccess() {
@@ -387,6 +489,7 @@ function initCaptacaoInline() {
     function resetForm() {
         form.reset();
         updateSliderFill();
+        hideFormError();
         successEl.classList.remove('visible');
         btnSubmit.style.display = 'flex';
         setLoading(false);
@@ -402,9 +505,10 @@ function initCaptacaoInline() {
         const tipo = document.getElementById('cap-tipo').value;
 
         if (!nome || !telefone || !tipo) {
-            alert('Por favor, preencha pelo menos Nome, Telefone e Tipo de imóvel.');
+            showFormError('Por favor, preencha Nome, Telefone e Tipo de imóvel.');
             return;
         }
+        hideFormError();
 
         const quartos = document.querySelector('input[name="cap-quartos"]:checked')?.value || 'Não informado';
         const vagas = document.querySelector('input[name="cap-vagas"]:checked')?.value || 'Não informado';
@@ -421,6 +525,7 @@ function initCaptacaoInline() {
                     tipo_imovel: tipo,
                     quartos, vagas,
                     faixa_preco: faixaPreco,
+                    website: document.getElementById('cap-website')?.value || '',
                     origem: window.location.pathname,
                     utm_source: window.riTracker?.utm?.source || '',
                     session_id: window.riTracker?.sessionId || ''
@@ -431,11 +536,40 @@ function initCaptacaoInline() {
             setLoading(false);
             showSuccess();
         } catch (err) {
-            console.error('Erro ao enviar lead:', err);
             setLoading(false);
-            alert('Erro ao enviar. Tente novamente ou fale conosco pelo WhatsApp.');
+            showFormError('Não foi possível enviar. Tente novamente ou fale pelo WhatsApp.');
         }
     });
+}
+
+// ===== CAROUSEL DOTS =====
+function initCarouselDots(grid, count) {
+    const container = document.getElementById('carousel-dots');
+    if (!container) return;
+    container.innerHTML = '';
+    if (count <= 1) return;
+
+    const dots = Array.from({ length: count }, (_, i) => {
+        const dot = document.createElement('button');
+        dot.className = 'carousel-dot' + (i === 0 ? ' active' : '');
+        dot.setAttribute('aria-label', `Imóvel ${i + 1}`);
+        dot.addEventListener('click', () => {
+            const card = grid.children[i];
+            if (card) card.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+        });
+        container.appendChild(dot);
+        return dot;
+    });
+
+    let scrollTimer;
+    grid.addEventListener('scroll', () => {
+        clearTimeout(scrollTimer);
+        scrollTimer = setTimeout(() => {
+            const cardWidth = grid.firstElementChild?.offsetWidth || 1;
+            const activeIndex = Math.round(grid.scrollLeft / (cardWidth + 16));
+            dots.forEach((dot, i) => dot.classList.toggle('active', i === activeIndex));
+        }, 50);
+    }, { passive: true });
 }
 
 // ===== ACCORDION =====

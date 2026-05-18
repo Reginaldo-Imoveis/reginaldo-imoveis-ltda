@@ -5,6 +5,9 @@ node_modules/
 backend/.totp-secret.json
 backend/database.sqlite
 
+# Backups automáticos
+backups/
+
 # Build output (gerado por npm run build)
 frontend/dist/
 
