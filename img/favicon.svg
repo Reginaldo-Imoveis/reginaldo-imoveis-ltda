@@ -1,20 +1,61 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
-  <!-- Background: dark burgundy red -->
-  <rect width="100" height="100" rx="18" fill="#6B1622"/>
-  <!-- "R": white, bold Georgia -->
+  <defs>
+    <clipPath id="inner">
+      <circle cx="50" cy="50" r="44"/>
+    </clipPath>
+  </defs>
+
+  <!-- Gold ring (outermost) -->
+  <circle cx="50" cy="50" r="50" fill="#D4A820"/>
+
+  <!-- Inner clip area -->
+  <g clip-path="url(#inner)">
+
+    <!-- Black background (full inner circle) -->
+    <circle cx="50" cy="50" r="44" fill="#0D0D0D"/>
+
+    <!-- Dark red lower body -->
+    <rect x="6" y="46" width="88" height="48" fill="#8C1A1A"/>
+
+    <!-- City skyline / prédios (vermelho subindo para o preto) -->
+    <!-- Prédio esquerdo alto -->
+    <rect x="6"  y="28" width="13" height="20" fill="#8C1A1A"/>
+    <!-- Escada esquerda -->
+    <rect x="6"  y="36" width="20" height="12" fill="#8C1A1A"/>
+    <!-- Bloco central-esquerda -->
+    <rect x="28" y="38" width="10" height="10" fill="#8C1A1A"/>
+    <!-- Bloco central espaçado -->
+    <rect x="40" y="40" width="8"  height="8"  fill="#8C1A1A"/>
+    <!-- Prédio direito alto -->
+    <rect x="62" y="24" width="16" height="24" fill="#8C1A1A"/>
+    <!-- Degrau direito -->
+    <rect x="62" y="36" width="24" height="12" fill="#8C1A1A"/>
+    <!-- Borda direita -->
+    <rect x="80" y="38" width="10" height="10" fill="#8C1A1A"/>
+
+  </g>
+
+  <!-- "R" branco bold (clipe separado para texto não cortar na borda) -->
   <text
-    x="10" y="80"
-    font-family="Georgia, 'Times New Roman', serif"
+    x="18" y="80"
+    clip-path="url(#inner)"
+    font-family="Georgia,'Times New Roman',serif"
     font-weight="700"
-    font-size="76"
+    font-size="60"
     fill="#FFFFFF"
   >R</text>
-  <!-- "i": gold accent, italic -->
+
+  <!-- "i" escuro/preto -->
   <text
-    x="63" y="80"
-    font-family="Georgia, 'Times New Roman', serif"
-    font-style="italic"
-    font-size="50"
-    fill="#C4A26B"
+    x="66" y="80"
+    clip-path="url(#inner)"
+    font-family="Georgia,'Times New Roman',serif"
+    font-weight="400"
+    font-size="40"
+    fill="#1A0A0A"
   >i</text>
+
+  <!-- Gold ring stroke por cima (bordas nítidas) -->
+  <circle cx="50" cy="50" r="47" fill="none" stroke="#D4A820" stroke-width="5"/>
+  <circle cx="50" cy="50" r="44" fill="none" stroke="#B8871A" stroke-width="1"/>
 </svg>
