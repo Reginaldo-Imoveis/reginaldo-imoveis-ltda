@@ -1,8 +1,8 @@
-const CACHE_NAME = 'ri-shell-v4';
+const CACHE_NAME = 'ri-shell-v5';
 const SHELL_ASSETS = [
     '/',
-    '/css/style.css?v=9',
-    '/js/main.js?v=5',
+    '/css/style.css?v=15',
+    '/js/main.js?v=17',
     '/js/tracker.js',
     '/manifest.json'
 ];
