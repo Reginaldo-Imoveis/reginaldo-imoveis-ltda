@@ -1,8 +1,8 @@
 const db = require('./db');
+const logger = require('./lib/logger');
 
-const initDatabase = () => {
+function initDatabase() {
     db.serialize(() => {
-        // Criar tabela de imóveis
         db.run(`
             CREATE TABLE IF NOT EXISTS imoveis (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -22,39 +22,30 @@ const initDatabase = () => {
                 createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
             )
         `, (err) => {
-            if (err) console.error('Erro ao criar tabela imoveis:', err.message);
-            else console.log('Tabela imoveis criada ou já existente.');
+            if (err) logger.error(`Erro ao criar tabela imoveis: ${err.message}`);
         });
 
-        // Adicionar coluna finalidade se não existir (migração)
-        db.run(`ALTER TABLE imoveis ADD COLUMN finalidade TEXT DEFAULT 'Venda'`, (err) => {
-            if (err && !err.message.includes('duplicate column')) {
-                console.error('Erro ao adicionar coluna finalidade:', err.message);
-            }
+        // Migrations: add columns if they don't exist yet
+        const migrations = [
+            `ALTER TABLE imoveis ADD COLUMN finalidade TEXT DEFAULT 'Venda'`,
+            `ALTER TABLE imoveis ADD COLUMN galeria TEXT DEFAULT '[]'`,
+            `ALTER TABLE imoveis ADD COLUMN mapa_url TEXT DEFAULT ''`,
+            `ALTER TABLE imoveis ADD COLUMN slug TEXT DEFAULT ''`,
+            `ALTER TABLE imoveis ADD COLUMN bairro TEXT DEFAULT ''`,
+            `ALTER TABLE leads_imobiliaria ADD COLUMN origem TEXT DEFAULT ''`,
+            `ALTER TABLE leads_imobiliaria ADD COLUMN utm_source TEXT DEFAULT ''`,
+            `ALTER TABLE leads_imobiliaria ADD COLUMN session_id TEXT DEFAULT ''`,
+            `ALTER TABLE leads_imobiliaria ADD COLUMN email TEXT DEFAULT ''`,
+            `ALTER TABLE leads_imobiliaria ADD COLUMN mensagem TEXT DEFAULT ''`,
+        ];
+        migrations.forEach(sql => {
+            db.run(sql, (err) => {
+                if (err && !err.message.includes('duplicate column') && !err.message.includes('no such table')) {
+                    logger.error(`Migration failed: ${sql} — ${err.message}`);
+                }
+            });
         });
 
-        // Migração: galeria de imagens (JSON array de paths)
-        db.run(`ALTER TABLE imoveis ADD COLUMN galeria TEXT DEFAULT '[]'`, (err) => {
-            if (err && !err.message.includes('duplicate column')) {
-                console.error('Erro ao adicionar coluna galeria:', err.message);
-            }
-        });
-
-        // Migração: URL do Google Maps
-        db.run(`ALTER TABLE imoveis ADD COLUMN mapa_url TEXT DEFAULT ''`, (err) => {
-            if (err && !err.message.includes('duplicate column')) {
-                console.error('Erro ao adicionar coluna mapa_url:', err.message);
-            }
-        });
-
-        // Migração: slug amigável para SEO
-        db.run(`ALTER TABLE imoveis ADD COLUMN slug TEXT DEFAULT ''`, (err) => {
-            if (err && !err.message.includes('duplicate column')) {
-                console.error('Erro ao adicionar coluna slug:', err.message);
-            }
-        });
-
-        // Criar tabela de leads
         db.run(`
             CREATE TABLE IF NOT EXISTS leads_imobiliaria (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -68,12 +59,8 @@ const initDatabase = () => {
                 status TEXT DEFAULT 'novo',
                 criado_em DATETIME DEFAULT CURRENT_TIMESTAMP
             )
-        `, (err) => {
-            if (err) console.error('Erro ao criar tabela leads_imobiliaria:', err.message);
-            else console.log('Tabela leads_imobiliaria criada ou já existente.');
-        });
+        `, (err) => { if (err) logger.error(`Erro ao criar tabela leads_imobiliaria: ${err.message}`); });
 
-        // Criar tabela de tracking comportamental
         db.run(`
             CREATE TABLE IF NOT EXISTS leads_tracking (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -91,85 +78,51 @@ const initDatabase = () => {
                 ip TEXT,
                 criado_em DATETIME DEFAULT CURRENT_TIMESTAMP
             )
-        `, (err) => {
-            if (err) console.error('Erro ao criar tabela leads_tracking:', err.message);
-            else console.log('Tabela leads_tracking criada ou já existente.');
-        });
+        `, (err) => { if (err) logger.error(`Erro ao criar tabela leads_tracking: ${err.message}`); });
 
-        // Migração: origem e UTM no lead
-        db.run(`ALTER TABLE leads_imobiliaria ADD COLUMN origem TEXT DEFAULT ''`, (err) => {
-            if (err && !err.message.includes('duplicate column')) {
-                console.error('Erro ao adicionar coluna origem:', err.message);
-            }
-        });
-        db.run(`ALTER TABLE leads_imobiliaria ADD COLUMN utm_source TEXT DEFAULT ''`, (err) => {
-            if (err && !err.message.includes('duplicate column')) {
-                console.error('Erro ao adicionar coluna utm_source:', err.message);
-            }
-        });
-        db.run(`ALTER TABLE leads_imobiliaria ADD COLUMN session_id TEXT DEFAULT ''`, (err) => {
-            if (err && !err.message.includes('duplicate column')) {
-                console.error('Erro ao adicionar coluna session_id:', err.message);
-            }
-        });
-
-        // Tabela de configuração da aplicação (TOTP, etc.)
         db.run(`
             CREATE TABLE IF NOT EXISTS app_config (
                 key TEXT PRIMARY KEY,
                 value TEXT NOT NULL
             )
-        `, (err) => {
-            if (err) console.error('Erro ao criar tabela app_config:', err.message);
-        });
+        `, (err) => { if (err) logger.error(`Erro ao criar tabela app_config: ${err.message}`); });
 
-        // Tabela de refresh tokens revogados (blacklist persistente)
         db.run(`
             CREATE TABLE IF NOT EXISTS revoked_tokens (
                 token_hash TEXT PRIMARY KEY,
                 expires_at INTEGER NOT NULL
             )
-        `, (err) => {
-            if (err) console.error('Erro ao criar tabela revoked_tokens:', err.message);
-        });
+        `, (err) => { if (err) logger.error(`Erro ao criar tabela revoked_tokens: ${err.message}`); });
 
-        // Índices para consultas frequentes
-        db.run(`CREATE INDEX IF NOT EXISTS idx_imoveis_tipo ON imoveis(tipo)`);
-        db.run(`CREATE INDEX IF NOT EXISTS idx_imoveis_finalidade ON imoveis(finalidade)`);
-        db.run(`CREATE INDEX IF NOT EXISTS idx_imoveis_status ON imoveis(status)`);
-        db.run(`CREATE INDEX IF NOT EXISTS idx_imoveis_preco ON imoveis(preco)`);
-        db.run(`CREATE INDEX IF NOT EXISTS idx_imoveis_destaque ON imoveis(destaque)`);
-        db.run(`CREATE INDEX IF NOT EXISTS idx_leads_status ON leads_imobiliaria(status)`);
-        db.run(`CREATE INDEX IF NOT EXISTS idx_tracking_session ON leads_tracking(session_id)`);
-        db.run(`CREATE INDEX IF NOT EXISTS idx_revoked_expires ON revoked_tokens(expires_at)`);
+        // Indexes
+        [
+            `CREATE INDEX IF NOT EXISTS idx_imoveis_tipo ON imoveis(tipo)`,
+            `CREATE INDEX IF NOT EXISTS idx_imoveis_finalidade ON imoveis(finalidade)`,
+            `CREATE INDEX IF NOT EXISTS idx_imoveis_status ON imoveis(status)`,
+            `CREATE INDEX IF NOT EXISTS idx_imoveis_preco ON imoveis(preco)`,
+            `CREATE INDEX IF NOT EXISTS idx_imoveis_destaque ON imoveis(destaque)`,
+            `CREATE INDEX IF NOT EXISTS idx_leads_status ON leads_imobiliaria(status)`,
+            `CREATE INDEX IF NOT EXISTS idx_tracking_session ON leads_tracking(session_id)`,
+            `CREATE INDEX IF NOT EXISTS idx_revoked_expires ON revoked_tokens(expires_at)`,
+        ].forEach(sql => db.run(sql));
 
-        // Inserir dados iniciais (seed) extraídos do site
-        const checkQuery = `SELECT count(*) as count FROM imoveis`;
-        db.get(checkQuery, (err, row) => {
-            if (err) {
-                console.error(err);
-                return;
-            }
-            if (row.count === 0) {
-                console.log('Populando banco com dados iniciais...');
-                const imoveis = [
-                    ['Comercial Vila Fátima', 'Comercial', 1350000.00, 'Amplo espaço comercial na Vila Fátima', 0, 1, 0, 400.0, 280.0, 'https://s3.amazonaws.com/static.nidoimovel.com.br/9cb67ffb59554ab1dabb65bcb370ddd9/imovel/RI/RI33/RI33022.jpg?1654113528', 1, 'Disponível'],
-                    ['Apartamento Jardim Avelino', 'Apartamento', 1200000.00, 'Lindo apartamento de alto padrão', 4, 3, 2, 285.0, 285.0, 'https://s3.amazonaws.com/static.nidoimovel.com.br/9cb67ffb59554ab1dabb65bcb370ddd9/imovel/RI/RI44/RI44029.jpg?1655219465', 1, 'Disponível'],
-                    ['Sobrado Chácara Mafalda', 'Sobrado', 1100000.00, 'Sobrado confortável e bem localizado', 4, 3, 1, 225.0, 300.0, 'https://s3.amazonaws.com/static.nidoimovel.com.br/9cb67ffb59554ab1dabb65bcb370ddd9/imovel/RI/RI25/RI25001.jpg?1653751433', 1, 'Vendido'],
-                    ['Apartamento Mooca', 'Apartamento', 998000.00, 'Apartamento espaçoso na Mooca', 5, 2, 2, 300.0, 300.0, 'https://s3.amazonaws.com/static.nidoimovel.com.br/9cb67ffb59554ab1dabb65bcb370ddd9/imovel/RI/RI62/RI62006.jpg?1658842013', 0, 'Disponível']
-                ];
+        // Seed initial data only if table is empty
+        db.get(`SELECT count(*) as count FROM imoveis`, (err, row) => {
+            if (err || row.count > 0) return;
 
-                const stmt = db.prepare(`INSERT INTO imoveis (titulo, tipo, preco, descricao, quartos, vagas, suites, areaUtil, areaTotal, imagem, destaque, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`);
-                imoveis.forEach(i => {
-                    stmt.run(i);
-                });
-                stmt.finalize();
-                console.log('Dados iniciais inseridos com sucesso!');
-            } else {
-                console.log('Banco já populado.');
-            }
+            logger.info('Populando banco com dados iniciais...');
+            const stmt = db.prepare(
+                `INSERT INTO imoveis (titulo, tipo, preco, descricao, quartos, vagas, suites, areaUtil, areaTotal, imagem, destaque, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+            );
+            [
+                ['Comercial Vila Fátima', 'Comercial', 1350000, 'Amplo espaço comercial na Vila Fátima', 0, 1, 0, 400, 280, 'https://s3.amazonaws.com/static.nidoimovel.com.br/9cb67ffb59554ab1dabb65bcb370ddd9/imovel/RI/RI33/RI33022.jpg?1654113528', 1, 'Disponível'],
+                ['Apartamento Jardim Avelino', 'Apartamento', 1200000, 'Lindo apartamento de alto padrão', 4, 3, 2, 285, 285, 'https://s3.amazonaws.com/static.nidoimovel.com.br/9cb67ffb59554ab1dabb65bcb370ddd9/imovel/RI/RI44/RI44029.jpg?1655219465', 1, 'Disponível'],
+                ['Sobrado Chácara Mafalda', 'Sobrado', 1100000, 'Sobrado confortável e bem localizado', 4, 3, 1, 225, 300, 'https://s3.amazonaws.com/static.nidoimovel.com.br/9cb67ffb59554ab1dabb65bcb370ddd9/imovel/RI/RI25/RI25001.jpg?1653751433', 1, 'Vendido'],
+                ['Apartamento Mooca', 'Apartamento', 998000, 'Apartamento espaçoso na Mooca', 5, 2, 2, 300, 300, 'https://s3.amazonaws.com/static.nidoimovel.com.br/9cb67ffb59554ab1dabb65bcb370ddd9/imovel/RI/RI62/RI62006.jpg?1658842013', 0, 'Disponível'],
+            ].forEach(row => stmt.run(row));
+            stmt.finalize(() => logger.info('Dados iniciais inseridos com sucesso.'));
         });
     });
-};
+}
 
 initDatabase();

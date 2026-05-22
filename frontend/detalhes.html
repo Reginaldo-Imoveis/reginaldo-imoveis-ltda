@@ -29,7 +29,19 @@
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="stylesheet" href="/css/style.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%23B8860B'/><text y='23' x='16' text-anchor='middle' font-size='20' fill='white' font-family='Georgia,serif' font-weight='bold'>R</text></svg>">
+    <link rel="stylesheet" href="/css/style.css?v=11">
+
+    <!-- Google Analytics 4 — Substitua G-XXXXXXXXXX pelo seu Measurement ID -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-XXXXXXXXXX');
+    </script>
+    <!-- Microsoft Clarity — Substitua XXXXXXXXXX pelo seu Project ID -->
+    <script>(function(c,l,a,r,i,t,y){c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y)})(window,document,"clarity","script","XXXXXXXXXX")</script>
 </head>
 <body>
 
@@ -42,10 +54,10 @@
             <nav class="nav-links">
                 <a href="/"><span>Início</span></a>
                 <a href="/#imoveis"><span>Imóveis</span></a>
-                <a href="/#servicos"><span>Serviços</span></a>
+                <a href="/#sobre"><span>Sobre nós</span></a>
                 <a href="/contato"><span>Contato</span></a>
             </nav>
-            <a href="https://wa.me/5511953280353" target="_blank" class="btn btn-primary btn-sm nav-cta">
+            <a href="https://wa.me/5511953280353" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-sm nav-cta">
                 Falar com especialista
             </a>
             <button class="mobile-menu-btn" aria-label="Menu">
@@ -57,7 +69,27 @@
     <!-- DETALHES -->
     <section class="detalhes-wrap">
         <div class="container" id="imovel-detalhes">
-            <p style="text-align:center; color: var(--c-text-mute); padding: 60px 0;">Carregando informações do imóvel…</p>
+            <!-- Skeleton premium enquanto carrega -->
+            <div class="detalhes-skeleton">
+                <div class="sk-block sk-sub" style="width:30%;margin-bottom:16px;"></div>
+                <div class="sk-block sk-title"></div>
+                <div class="sk-block sk-sub" style="width:45%;"></div>
+                <div class="sk-block sk-img"></div>
+                <div style="display:grid;grid-template-columns:1.7fr 1fr;gap:60px;">
+                    <div>
+                        <div class="sk-block sk-line w-full"></div>
+                        <div class="sk-block sk-line w-3q"></div>
+                        <div class="sk-block sk-line w-full"></div>
+                        <div class="sk-block sk-line w-half"></div>
+                        <div class="sk-block sk-line w-3q" style="margin-top:12px;"></div>
+                    </div>
+                    <div>
+                        <div class="sk-block sk-line w-half" style="height:40px;margin-bottom:20px;"></div>
+                        <div class="sk-block sk-line w-full" style="height:52px;margin-bottom:12px;"></div>
+                        <div class="sk-block sk-line w-full" style="height:52px;"></div>
+                    </div>
+                </div>
+            </div>
         </div>
     </section>
 
@@ -65,35 +97,49 @@
     <footer class="footer">
         <div class="container">
             <div class="footer-bottom" style="border-top: none;">
-                <span>&copy; 1998 Reginaldo Imóveis · <a href="/admin" style="color:inherit;text-decoration:none;cursor:default;">CRECI 17407-J</a></span>
+                <span>&copy; <span id="footer-year"></span> Reginaldo Imóveis · CRECI 17407-J</span>
                 <span><a href="/">Voltar à página inicial</a></span>
             </div>
         </div>
     </footer>
 
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', async () => {
+            // ── Header scroll + mobile menu ──
             const header = document.getElementById('site-header');
-            const onScroll = () => {
-                if (window.scrollY > 30) header.classList.add('scrolled');
-                else header.classList.remove('scrolled');
-            };
-            window.addEventListener('scroll', onScroll, { passive: true });
-            onScroll();
-
+            if (header) {
+                let _hTick = false;
+                const onScroll = () => {
+                    if (_hTick) return;
+                    _hTick = true;
+                    requestAnimationFrame(() => {
+                        header.classList.toggle('scrolled', window.scrollY > 30);
+                        _hTick = false;
+                    });
+                };
+                window.addEventListener('scroll', onScroll, { passive: true });
+                onScroll();
+            }
             const menuBtn = document.querySelector('.mobile-menu-btn');
             const navLinks = document.querySelector('.nav-links');
             if (menuBtn && navLinks) {
-                menuBtn.addEventListener('click', () => navLinks.classList.toggle('open'));
+                menuBtn.setAttribute('aria-expanded', 'false');
+                menuBtn.addEventListener('click', () => {
+                    navLinks.classList.toggle('open');
+                    menuBtn.setAttribute('aria-expanded', String(navLinks.classList.contains('open')));
+                });
                 document.addEventListener('click', (e) => {
                     if (!menuBtn.contains(e.target) && !navLinks.contains(e.target)) {
                         navLinks.classList.remove('open');
+                        menuBtn.setAttribute('aria-expanded', 'false');
                     }
                 });
             }
-        });
+            // Footer year
+            const fy = document.getElementById('footer-year');
+            if (fy) fy.textContent = new Date().getFullYear();
 
-        document.addEventListener('DOMContentLoaded', async () => {
+            // ── Carregar detalhes do imóvel ──
             const params = new URLSearchParams(window.location.search);
             let id = params.get('id');
             if (!id) {
@@ -118,7 +164,21 @@
                 const imovel = await response.json();
                 const preco = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 0 }).format(imovel.preco);
                 const entrada = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 0 }).format(imovel.preco * 0.2);
-                const msgWhatsapp = encodeURIComponent(`Olá, estou interessado(a) no imóvel "${imovel.titulo}" (ID: ${imovel.id}). Gostaria de agendar uma visita.`);
+                const precoFmt = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 0 }).format(imovel.preco);
+                const msgWhatsapp = encodeURIComponent(
+                    `Olá! Vi o imóvel *"${imovel.titulo}"* no site da Reginaldo Imóveis e gostaria de mais informações:\n\n` +
+                    `🏠 *Tipo:* ${imovel.tipo}\n` +
+                    (imovel.quartos > 0 ? `🛏 *Quartos:* ${imovel.quartos}\n` : '') +
+                    (imovel.vagas > 0 ? `🚗 *Vagas:* ${imovel.vagas}\n` : '') +
+                    (imovel.areaUtil > 0 ? `📐 *Área:* ${imovel.areaUtil}m²\n` : '') +
+                    `💰 *Valor:* ${precoFmt}\n\n` +
+                    `🔗 ${window.location.href}\n\n` +
+                    `Poderia me dar mais detalhes?`
+                );
+
+                // Atualizar botão WPP flutuante com mensagem específica do imóvel
+                const wppFloat = document.querySelector('.wpp-flutuante');
+                if (wppFloat) wppFloat.href = `https://wa.me/5511953280353?text=${msgWhatsapp}`;
 
                 let statusClass = '';
                 if (imovel.status === 'Vendido') statusClass = 'vendido';
@@ -238,6 +298,37 @@
                     if (tag) tag.content = val;
                 });
 
+                // ── Simulador: cálculo real de parcela ──
+                const _financiado = imovel.preco * 0.8;
+                const _calcParcela = (n) => {
+                    const r = 0.008; // 0,8% a.m. — ref. Caixa/Itaú 2024
+                    return _financiado * r / (1 - Math.pow(1 + r, -n));
+                };
+                const _fmtSimul = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 0 });
+                const _parcelaFmt = (n) => _fmtSimul.format(_calcParcela(n));
+
+                const simuladorHtml = finalidade === 'Locação'
+                    ? '<div class="simulador-card">' +
+                      '<h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg> Condições de locação</h3>' +
+                      '<p class="sub">Consulte caução, documentação e disponibilidade com nossos especialistas.</p>' +
+                      '<a href="https://wa.me/5511953280353?text=' + encodeURIComponent('Olá! Tenho interesse em alugar o imóvel "' + imovel.titulo + '".\n📍 ' + imovel.tipo + '\n📐 ' + (imovel.areaUtil||0) + 'm²\n💰 ' + preco + '/mês\n\n🔗 ' + pageUrl + '\n\nPoderia me passar as condições e documentação?') + '" target="_blank" rel="noopener noreferrer" class="btn btn-outline-gold btn-block">Consultar condições de locação</a>' +
+                      '</div>'
+                    : '<div class="simulador-card">' +
+                      '<h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="2" y1="9" x2="22" y2="9"/></svg> Simulador rápido</h3>' +
+                      '<p class="sub">Estimativa · entrada 20% · taxa ref. 0,8% a.m.</p>' +
+                      '<div class="simulador-grid">' +
+                        '<div><label class="form-label">Entrada (20%)</label><input type="text" class="form-control" value="' + entrada + '" readonly></div>' +
+                        '<div><label class="form-label">Prazo</label><select class="form-control" id="sim-prazo">' +
+                          '<option value="360">360 meses (30 anos)</option>' +
+                          '<option value="240">240 meses (20 anos)</option>' +
+                          '<option value="120">120 meses (10 anos)</option>' +
+                        '</select></div>' +
+                        '<div style="grid-column:1/-1"><label class="form-label">Parcela estimada</label><input type="text" id="sim-parcela" class="form-control" value="' + _parcelaFmt(360) + '" readonly></div>' +
+                      '</div>' +
+                      '<small style="color:var(--c-text-mute);font-size:0.75rem;margin-top:8px;display:block;">*Simulação não vinculante. Sujeito a aprovação bancária e correção monetária.</small>' +
+                      '<a href="https://wa.me/5511953280353?text=' + encodeURIComponent('Olá! Gostaria de uma simulação de financiamento para o imóvel "' + imovel.titulo + '" (' + preco + ').\n\n🔗 ' + pageUrl) + '" target="_blank" rel="noopener noreferrer" class="btn btn-outline-gold btn-block" style="margin-top:16px;">Solicitar simulação oficial</a>' +
+                      '</div>';
+
                 container.innerHTML = `
                     <nav class="breadcrumb">
                         <a href="/">Início</a>
@@ -252,19 +343,17 @@
                         <h1 class="detalhes-title">${imovel.titulo} ${statusHtml}</h1>
                         <div class="detalhes-loc">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                            São Paulo / SP
+                            ${imovel.bairro ? imovel.bairro + ' · ' : ''}São Paulo / SP
                         </div>
                     </div>
 
-                    <div class="galeria-principal">
-                        <img src="${imgUrl}" alt="${imovel.titulo}" onerror="this.src='https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=1600&auto=format'">
-                    </div>
+                    <div class="galeria-wrap" id="galeria-wrap"></div>
 
                     <div class="detalhes-grid">
                         <div>
                             <div class="detalhes-section">
                                 <h2>Sobre o imóvel</h2>
-                                <p>${imovel.descricao || 'Imóvel sem descrição detalhada disponível.'}</p>
+                                <p>${(imovel.descricao || 'Imóvel sem descrição detalhada disponível.').replace(/\n/g, '<br>')}</p>
                             </div>
 
                             <div class="detalhes-section">
@@ -298,13 +387,13 @@
                                 </div>
                             </div>
 
+                            ${imovel.mapa_url ? `
                             <div class="detalhes-section">
                                 <h2>Localização</h2>
-                                <p style="margin-bottom: 24px;">O imóvel está localizado em uma das melhores regiões de São Paulo, com fácil acesso a comércio, escolas, parques e transporte público.</p>
                                 <div style="border-radius: var(--radius-lg); overflow: hidden; border: 1px solid var(--c-line);">
-                                    <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3656.786932402179!2d-46.568393523719036!3d-23.576100162137943!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x94ce5c8f8fa14b73%3A0xedb9a68a527bdff3!2sAv.%20Sapopemba%2C%203320%20-%20Vila%20Regente%20Feij%C3%B3%2C%20S%C3%A3o%20Paulo%20-%20SP!5e0!3m2!1spt-BR!2sbr!4v1715620000000" width="100%" height="320" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+                                    <iframe src="${imovel.mapa_url}" width="100%" height="320" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
                                 </div>
-                            </div>
+                            </div>` : ''}
                         </div>
 
                         <aside>
@@ -312,10 +401,10 @@
                                 <div class="preco-label">${precoLabel}</div>
                                 <div class="preco">
                                     ${preco}
-                                    <em>Possibilidade de financiamento</em>
+                                    ${finalidade !== 'Locação' ? '<em>Possibilidade de financiamento</em>' : ''}
                                 </div>
                                 <div class="acoes">
-                                    <a href="https://wa.me/5511953280353?text=${msgWhatsapp}" target="_blank" class="btn btn-whatsapp btn-block">
+                                    <a href="https://wa.me/5511953280353?text=${msgWhatsapp}" target="_blank" rel="noopener noreferrer" class="btn btn-whatsapp btn-block">
                                         <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/></svg>
                                         Falar no WhatsApp
                                     </a>
@@ -327,30 +416,7 @@
                                     <span class="microcopy">Resposta média em 5 minutos</span>
                                 </div>
 
-                                <div class="simulador-card">
-                                    <h3>
-                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="2" y1="9" x2="22" y2="9"/></svg>
-                                        Simulador rápido
-                                    </h3>
-                                    <p class="sub">Estimativa para uma entrada de 20%.</p>
-                                    <div class="simulador-grid">
-                                        <div>
-                                            <label class="form-label">Entrada</label>
-                                            <input type="text" class="form-control" value="${entrada}" readonly>
-                                        </div>
-                                        <div>
-                                            <label class="form-label">Prazo</label>
-                                            <select class="form-control">
-                                                <option>360 meses</option>
-                                                <option>240 meses</option>
-                                                <option>120 meses</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                    <a href="https://wa.me/5511953280353?text=Gostaria%20de%20uma%20simulação%20detalhada%20para%20o%20imóvel%20${imovel.id}" target="_blank" class="btn btn-outline-gold btn-block">
-                                        Solicitar simulação oficial
-                                    </a>
-                                </div>
+                                ${simuladorHtml}
 
                                 <div class="contato-rodape">
                                     <strong>Reginaldo Imóveis</strong>
@@ -361,6 +427,230 @@
                         </aside>
                     </div>
                 `;
+
+                // ── Carrossel com crossfade real ──
+                (function buildCarousel() {
+                    const wrap = document.getElementById('galeria-wrap');
+                    if (!wrap) return;
+
+                    let galeria = [];
+                    try { const g = JSON.parse(imovel.galeria || '[]'); galeria = Array.isArray(g) ? g : []; } catch(e) {}
+                    const allImgs = [imgUrl, ...galeria.filter(u => u !== imgUrl)];
+                    let current = 0;
+                    let busy = false;
+
+                    // ── Contêiner principal ──
+                    const mainDiv = document.createElement('div');
+                    mainDiv.className = 'galeria-principal';
+
+                    // Duas camadas para crossfade sem flash
+                    const imgFront = document.createElement('img');
+                    imgFront.className = 'galeria-img layer-front';
+                    imgFront.src = allImgs[0];
+                    imgFront.alt = imovel.titulo;
+
+                    const imgBehind = document.createElement('img');
+                    imgBehind.className = 'galeria-img layer-behind';
+                    imgBehind.alt = imovel.titulo;
+
+                    mainDiv.appendChild(imgBehind);
+                    mainDiv.appendChild(imgFront);
+
+                    // Preload the next image silently
+                    function preload(idx) {
+                        const pre = new Image();
+                        pre.src = allImgs[(idx + allImgs.length) % allImgs.length];
+                    }
+
+                    if (allImgs.length > 1) {
+                        // Nav buttons
+                        const btnPrev = document.createElement('button');
+                        btnPrev.className = 'galeria-nav prev';
+                        btnPrev.setAttribute('aria-label', 'Anterior');
+                        btnPrev.innerHTML = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>';
+
+                        const btnNext = document.createElement('button');
+                        btnNext.className = 'galeria-nav next';
+                        btnNext.setAttribute('aria-label', 'Próxima');
+                        btnNext.innerHTML = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>';
+
+                        // Counter (canto superior direito)
+                        const counter = document.createElement('span');
+                        counter.className = 'galeria-counter';
+                        counter.textContent = `1 / ${allImgs.length}`;
+
+                        // Dots (máx 12 fotos)
+                        let dots = [];
+                        if (allImgs.length <= 12) {
+                            const dotsDiv = document.createElement('div');
+                            dotsDiv.className = 'galeria-dots';
+                            allImgs.forEach((_, i) => {
+                                const dot = document.createElement('button');
+                                dot.className = 'galeria-dot' + (i === 0 ? ' active' : '');
+                                dot.setAttribute('aria-label', `Foto ${i + 1}`);
+                                dot.addEventListener('click', () => goTo(i));
+                                dotsDiv.appendChild(dot);
+                                dots.push(dot);
+                            });
+                            mainDiv.appendChild(dotsDiv);
+                        }
+
+                        mainDiv.appendChild(btnPrev);
+                        mainDiv.appendChild(btnNext);
+                        mainDiv.appendChild(counter);
+
+                        // Swipe / touch support
+                        let tx = 0;
+                        mainDiv.addEventListener('touchstart', e => { tx = e.touches[0].clientX; }, { passive: true });
+                        mainDiv.addEventListener('touchend', e => {
+                            const dx = e.changedTouches[0].clientX - tx;
+                            if (Math.abs(dx) > 45) goTo(current + (dx > 0 ? -1 : 1));
+                        }, { passive: true });
+
+                        // Click nav
+                        btnPrev.addEventListener('click', e => { e.stopPropagation(); goTo(current - 1); });
+                        btnNext.addEventListener('click', e => { e.stopPropagation(); goTo(current + 1); });
+
+                        // Função de navegação com crossfade
+                        function goTo(idx) {
+                            if (busy) return;
+                            const next = (idx + allImgs.length) % allImgs.length;
+                            if (next === current) return;
+                            busy = true;
+
+                            // Carrega próxima na camada atrás
+                            imgBehind.src = allImgs[next];
+                            imgBehind.style.opacity = '0';
+                            imgBehind.style.transform = 'scale(1.03)';
+
+                            const doSwap = () => {
+                                // Crossfade: frente sai, atrás entra
+                                imgFront.style.opacity = '0';
+                                imgFront.style.transform = 'scale(.98)';
+                                imgBehind.style.opacity = '1';
+                                imgBehind.style.transform = 'scale(1)';
+
+                                // Após transição, troca as classes
+                                setTimeout(() => {
+                                    // Redefine layers sem transição
+                                    imgFront.style.cssText = '';
+                                    imgBehind.style.cssText = '';
+                                    imgFront.src = allImgs[next];
+                                    imgFront.className = 'galeria-img layer-front';
+                                    imgBehind.className = 'galeria-img layer-behind';
+                                    current = next;
+                                    busy = false;
+                                    preload(current + 1);
+                                }, 560);
+
+                                // Atualiza UI
+                                counter.textContent = `${next + 1} / ${allImgs.length}`;
+                                dots.forEach((d, i) => d.classList.toggle('active', i === next));
+                                thumbBtns.forEach((b, i) => b.classList.toggle('active', i === next));
+                                thumbBtns[next]?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+                            };
+
+                            if (imgBehind.complete && imgBehind.naturalWidth) {
+                                doSwap();
+                            } else {
+                                imgBehind.onload = doSwap;
+                                imgBehind.onerror = () => { busy = false; };
+                            }
+                        }
+
+                        // Expõe para uso externo (teclado)
+                        mainDiv._goTo = goTo;
+                    }
+
+                    wrap.appendChild(mainDiv);
+
+                    // ── Thumbnails ──
+                    const thumbBtns = [];
+                    if (allImgs.length > 1) {
+                        const thumbsDiv = document.createElement('div');
+                        thumbsDiv.className = 'galeria-thumbs';
+                        allImgs.forEach((url, i) => {
+                            const btn = document.createElement('button');
+                            btn.className = 'thumb-btn' + (i === 0 ? ' active' : '');
+                            btn.setAttribute('aria-label', `Ver foto ${i + 1}`);
+                            const img = document.createElement('img');
+                            img.src = url;
+                            img.alt = `Foto ${i + 1}`;
+                            btn.appendChild(img);
+                            btn.addEventListener('click', () => mainDiv._goTo && mainDiv._goTo(i));
+                            thumbsDiv.appendChild(btn);
+                            thumbBtns.push(btn);
+                        });
+                        wrap.appendChild(thumbsDiv);
+                        preload(1);
+                    }
+
+                    // ── Lightbox ao clicar na imagem ──
+                    mainDiv.addEventListener('click', e => {
+                        if (e.target.closest('.galeria-nav, .galeria-dots, .galeria-dot')) return;
+                        let lbCur = current;
+
+                        const lb = document.createElement('div');
+                        lb.className = 'lightbox-overlay';
+
+                        const lbImg = document.createElement('img');
+                        lbImg.src = allImgs[lbCur];
+                        lbImg.alt = imovel.titulo;
+
+                        const closeSvg = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+                        const closeBtn = document.createElement('button');
+                        closeBtn.className = 'lightbox-close';
+                        closeBtn.innerHTML = closeSvg;
+
+                        const lbPrev = document.createElement('button');
+                        lbPrev.className = 'lightbox-nav prev';
+                        lbPrev.innerHTML = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>';
+
+                        const lbNext = document.createElement('button');
+                        lbNext.className = 'lightbox-nav next';
+                        lbNext.innerHTML = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>';
+
+                        lb.appendChild(lbPrev);
+                        lb.appendChild(lbImg);
+                        lb.appendChild(lbNext);
+                        lb.appendChild(closeBtn);
+                        document.body.appendChild(lb);
+
+                        const lbGo = i => {
+                            lbCur = (i + allImgs.length) % allImgs.length;
+                            lbImg.style.opacity = '0';
+                            setTimeout(() => { lbImg.src = allImgs[lbCur]; lbImg.style.opacity = '1'; }, 180);
+                        };
+
+                        closeBtn.addEventListener('click', () => lb.remove());
+                        lbPrev.addEventListener('click', e => { e.stopPropagation(); lbGo(lbCur - 1); });
+                        lbNext.addEventListener('click', e => { e.stopPropagation(); lbGo(lbCur + 1); });
+                        lb.addEventListener('click', e => { if (e.target === lb) lb.remove(); });
+
+                        const kbHandler = e => {
+                            if (e.key === 'ArrowLeft') lbGo(lbCur - 1);
+                            if (e.key === 'ArrowRight') lbGo(lbCur + 1);
+                            if (e.key === 'Escape') { lb.remove(); document.removeEventListener('keydown', kbHandler); }
+                        };
+                        document.addEventListener('keydown', kbHandler);
+                    });
+
+                    // ── Teclado para navegar no carrossel ──
+                    document.addEventListener('keydown', e => {
+                        if (document.querySelector('.lightbox-overlay') || allImgs.length <= 1) return;
+                        if (e.key === 'ArrowLeft') mainDiv._goTo && mainDiv._goTo(current - 1);
+                        if (e.key === 'ArrowRight') mainDiv._goTo && mainDiv._goTo(current + 1);
+                    });
+                })();
+
+                // ── Simulador interativo ──
+                const simPrazo = document.getElementById('sim-prazo');
+                const simParcela = document.getElementById('sim-parcela');
+                if (simPrazo && simParcela) {
+                    simPrazo.addEventListener('change', () => {
+                        simParcela.value = _parcelaFmt(parseInt(simPrazo.value));
+                    });
+                }
 
                 // Compartilhar imóvel
                 document.getElementById('btn-compartilhar')?.addEventListener('click', async () => {
@@ -386,7 +676,6 @@
                 });
 
             } catch (error) {
-                console.error(error);
                 container.innerHTML = `
                     <div style="text-align:center; padding: 80px 0;">
                         <h2 class="section-title" style="font-size: 2rem;">Imóvel não encontrado</h2>
@@ -401,9 +690,11 @@
     <script src="/js/tracker.js" defer></script>
 
     <!-- WPP Flutuante -->
-    <a href="https://wa.me/5511953280353" target="_blank" class="wpp-flutuante" title="Falar no WhatsApp">
-        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/></svg>
-    </a>
+    <div class="wpp-flutuante-wrap">
+        <a href="https://wa.me/5511953280353" target="_blank" rel="noopener noreferrer" class="wpp-flutuante" title="Falar no WhatsApp">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/></svg>
+        </a>
+    </div>
 
     <!-- LGPD COOKIE BANNER -->
     <div class="lgpd-banner" id="lgpd-banner" hidden>

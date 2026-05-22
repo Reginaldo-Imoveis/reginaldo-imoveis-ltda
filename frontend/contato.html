@@ -12,7 +12,14 @@
     <meta property="og:url" content="https://www.reginaldoimoveis.com.br/contato">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="stylesheet" href="/css/style.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%23B8860B'/><text y='23' x='16' text-anchor='middle' font-size='20' fill='white' font-family='Georgia,serif' font-weight='bold'>R</text></svg>">
+    <link rel="stylesheet" href="/css/style.css?v=11">
+
+    <!-- Google Analytics 4 — Substitua G-XXXXXXXXXX pelo seu Measurement ID -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+    <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-XXXXXXXXXX');</script>
+    <!-- Microsoft Clarity — Substitua XXXXXXXXXX pelo seu Project ID -->
+    <script>(function(c,l,a,r,i,t,y){c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y)})(window,document,"clarity","script","XXXXXXXXXX")</script>
 
     <script type="application/ld+json">
     {
@@ -52,7 +59,7 @@
             <nav class="nav-links">
                 <a href="/"><span>Início</span></a>
                 <a href="/#imoveis"><span>Imóveis</span></a>
-                <a href="/#servicos"><span>Serviços</span></a>
+                <a href="/#sobre"><span>Sobre nós</span></a>
                 <a href="/contato" class="active"><span>Contato</span></a>
             </nav>
             <a href="https://wa.me/5511953280353" target="_blank" class="btn btn-primary btn-sm nav-cta">
@@ -144,24 +151,24 @@
                     <h2>Envie uma <em style="font-style: italic; font-family: var(--font-serif); color: var(--c-gold);">mensagem</em></h2>
                     <p class="lead">Preencha o formulário e nossa equipe entrará em contato em até 1 dia útil.</p>
 
-                    <form onsubmit="event.preventDefault(); alert('Mensagem enviada com sucesso! Logo entraremos em contato.'); this.reset();">
+                    <form id="contato-form">
                         <div class="form-row">
                             <div class="form-group">
                                 <label class="form-label">Nome completo</label>
-                                <input type="text" class="form-control" required placeholder="Seu nome">
+                                <input type="text" id="ct-nome" class="form-control" required placeholder="Seu nome">
                             </div>
                             <div class="form-group">
                                 <label class="form-label">Telefone / WhatsApp</label>
-                                <input type="tel" class="form-control" required placeholder="(11) 99999-9999">
+                                <input type="tel" id="ct-telefone" class="form-control" required placeholder="(11) 99999-9999">
                             </div>
                         </div>
                         <div class="form-group">
                             <label class="form-label">E-mail</label>
-                            <input type="email" class="form-control" required placeholder="seu@email.com">
+                            <input type="email" id="ct-email" class="form-control" required placeholder="seu@email.com">
                         </div>
                         <div class="form-group">
                             <label class="form-label">Interesse</label>
-                            <select class="form-control">
+                            <select id="ct-interesse" class="form-control">
                                 <option>Comprar um imóvel</option>
                                 <option>Vender meu imóvel</option>
                                 <option>Investir em imóveis</option>
@@ -171,9 +178,13 @@
                         </div>
                         <div class="form-group">
                             <label class="form-label">Mensagem</label>
-                            <textarea class="form-control" rows="5" required placeholder="Como podemos te ajudar?"></textarea>
+                            <textarea id="ct-mensagem" class="form-control" rows="5" required placeholder="Como podemos te ajudar?"></textarea>
                         </div>
-                        <button type="submit" class="btn btn-primary btn-block btn-lg">
+                        <div id="ct-success" style="display:none; text-align:center; padding:20px; color:var(--c-success); font-weight:600;">
+                            ✓ Mensagem enviada com sucesso! Nossa equipe entrará em contato em breve.
+                        </div>
+                        <div id="ct-error" style="display:none; text-align:center; padding:12px; color:#FF8B8B; font-size:0.875rem;"></div>
+                        <button type="submit" id="ct-btn" class="btn btn-primary btn-block btn-lg">
                             Enviar mensagem
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
                         </button>
@@ -207,7 +218,7 @@
                     <h4>Navegação</h4>
                     <p><a href="/">Início</a></p>
                     <p><a href="/#imoveis">Buscar imóveis</a></p>
-                    <p><a href="/#servicos">Serviços</a></p>
+                    <p><a href="/#sobre">Sobre nós</a></p>
                     <p><a href="/contato">Contato</a></p>
                 </div>
                 <div class="footer-col">
@@ -268,5 +279,48 @@
         })();
     </script>
     <script src="/js/tracker.js" defer></script>
+    <script>
+        // ── Contato form — real API submission ────────────────
+        document.getElementById('contato-form')?.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const btn = document.getElementById('ct-btn');
+            const errEl = document.getElementById('ct-error');
+            const successEl = document.getElementById('ct-success');
+            errEl.style.display = 'none';
+
+            const nome = document.getElementById('ct-nome').value.trim();
+            const telefone = document.getElementById('ct-telefone').value.trim();
+            const email = document.getElementById('ct-email').value.trim();
+            const interesse = document.getElementById('ct-interesse').value;
+            const mensagem = document.getElementById('ct-mensagem').value.trim();
+
+            if (!nome || !telefone || !mensagem) {
+                errEl.textContent = 'Por favor preencha os campos obrigatórios.';
+                errEl.style.display = 'block';
+                return;
+            }
+
+            btn.disabled = true;
+            btn.textContent = 'Enviando…';
+
+            try {
+                const res = await fetch('/api/leads/contato', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ nome, telefone, email, interesse, mensagem })
+                });
+                const data = await res.json().catch(() => ({}));
+                if (!res.ok) throw new Error(data.error || 'Erro ao enviar');
+                successEl.style.display = 'block';
+                e.target.reset();
+                btn.style.display = 'none';
+            } catch (err) {
+                errEl.textContent = err.message || 'Não foi possível enviar. Tente pelo WhatsApp.';
+                errEl.style.display = 'block';
+                btn.disabled = false;
+                btn.innerHTML = 'Enviar mensagem <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>';
+            }
+        });
+    </script>
 </body>
 </html>

@@ -18,10 +18,14 @@ document.addEventListener('DOMContentLoaded', () => {
     initLogin();
     initLogout();
     initModal();
+    initConfirmDelete();
     initForm();
     initSearchAndFilter();
+    initTabelaActions();
     initLeadsView();
     initSidebarNav();
+    init2faButtons();
+    document.getElementById('analytics-periodo')?.addEventListener('change', renderAnalytics);
 });
 
 async function checkAuthStatus() {
@@ -31,7 +35,15 @@ async function checkAuthStatus() {
             showPanel();
             scheduleRefresh();
         }
-    } catch (e) { /* not authenticated */ }
+        // 401 = não autenticado → mantém tela de login (comportamento esperado)
+    } catch (e) {
+        // Erro de rede = servidor provavelmente offline
+        const errEl = document.getElementById('login-error');
+        if (errEl) {
+            errEl.textContent = 'Servidor indisponível. Execute "npm start" e tente novamente.';
+            errEl.classList.add('show');
+        }
+    }
 }
 
 // ============================ TOKEN REFRESH ============================
@@ -158,6 +170,13 @@ function initSidebarNav() {
             switchView('seguranca');
         });
     }
+    const linkAnalytics = document.getElementById('link-analytics');
+    if (linkAnalytics) {
+        linkAnalytics.addEventListener('click', (e) => {
+            e.preventDefault();
+            switchView('analytics');
+        });
+    }
 }
 
 // ============================ LISTA ============================
@@ -171,9 +190,8 @@ async function carregarImoveisAdmin() {
         imoveisCache = Array.isArray(json) ? json : (json.data || []);
         renderTabela();
         renderStats();
-    } catch (err) {
+    } catch {
         tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:#FF8B8B; padding: 40px;">Erro ao carregar imóveis.</td></tr>`;
-        console.error(err);
     }
 }
 
@@ -218,7 +236,7 @@ function renderTabela() {
         return `
             <tr data-id="${parseInt(i.id)}">
                 <td>
-                    <img class="imovel-row-img" src="${img}" alt="${escHtml(i.titulo)}" onerror="this.src='https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=200&auto=format'">
+                    <img class="imovel-row-img" src="${img}" alt="${escHtml(i.titulo)}">
                 </td>
                 <td>
                     <div class="row-titulo">${escHtml(i.titulo)}</div>
@@ -231,13 +249,13 @@ function renderTabela() {
                 <td><div class="row-preco">${preco}</div></td>
                 <td>
                     <div class="row-actions">
-                        <a class="btn-action" href="/detalhes?id=${parseInt(i.id)}" target="_blank" title="Ver no site">
+                        <a class="btn-action" href="/imovel/${escHtml(i.slug || '')}-${parseInt(i.id)}" target="_blank" rel="noopener noreferrer" title="Ver no site">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                         </a>
-                        <button class="btn-action" onclick="abrirEdicao(${parseInt(i.id)})" title="Editar">
+                        <button class="btn-action" data-action="editar" data-id="${parseInt(i.id)}" title="Editar">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                         </button>
-                        <button class="btn-action del" onclick="confirmarExclusao(${parseInt(i.id)})" title="Excluir">
+                        <button class="btn-action del" data-action="excluir" data-id="${parseInt(i.id)}" title="Excluir">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
                         </button>
                     </div>
@@ -268,6 +286,19 @@ function initSearchAndFilter() {
     const sel = document.getElementById('admin-filter-status');
     if (input) input.addEventListener('input', renderTabela);
     if (sel) sel.addEventListener('change', renderTabela);
+}
+
+function initTabelaActions() {
+    const tbody = document.getElementById('tbody-imoveis');
+    if (!tbody) return;
+    tbody.addEventListener('click', (e) => {
+        const btn = e.target.closest('button[data-action]');
+        if (!btn) return;
+        const id = parseInt(btn.dataset.id);
+        const action = btn.dataset.action;
+        if (action === 'editar') abrirEdicao(id);
+        if (action === 'excluir') confirmarExclusao(id);
+    });
 }
 
 // ============================ MODAL ============================
@@ -334,7 +365,7 @@ function abrirNovo() {
 }
 
 window.abrirEdicao = function(id) {
-    const imovel = imoveisCache.find(i => i.id === id);
+    const imovel = imoveisCache.find(i => String(i.id) === String(id));
     if (!imovel) return;
 
     editandoId = id;
@@ -354,6 +385,7 @@ window.abrirEdicao = function(id) {
     document.getElementById('imagem').value = '';
     document.getElementById('galeria').value = '';
     document.getElementById('mapa_url').value = imovel.mapa_url || '';
+    document.getElementById('bairro').value = imovel.bairro || '';
 
     const preview = document.getElementById('preview-imagem');
     if (imovel.imagem) {
@@ -444,8 +476,7 @@ function initForm() {
                     if (!refreshed) forceLogout();
                 }
             }
-        } catch (err) {
-            console.error(err);
+        } catch {
             msg.textContent = 'Erro de comunicação com o servidor.';
             msg.classList.add('show', 'err');
         } finally {
@@ -468,7 +499,7 @@ function fecharConfirm() {
     idParaExcluir = null;
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+function initConfirmDelete() {
     const btn = document.getElementById('btn-confirm-del');
     if (!btn) return;
     btn.addEventListener('click', async () => {
@@ -481,19 +512,19 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             const data = await res.json();
             if (res.ok && data.success) {
-                showToast('Imóvel excluído', 'ok');
+                showToast('Imóvel excluído com sucesso', 'ok');
                 fecharConfirm();
                 carregarImoveisAdmin();
             } else {
                 showToast(data.error || 'Erro ao excluir', 'err');
             }
         } catch (err) {
-            showToast('Erro de conexão', 'err');
+            showToast('Erro de conexão com o servidor', 'err');
         } finally {
             btn.disabled = false;
         }
     });
-});
+}
 
 // ============================ LEADS ============================
 let leadsCache = [];
@@ -509,35 +540,51 @@ function initLeadsView() {
 
     const filterSel = document.getElementById('leads-filter-status');
     if (filterSel) filterSel.addEventListener('change', () => renderLeads());
+
+    // Event delegation para os selects de status dentro da tabela de leads
+    const tbodyLeads = document.getElementById('tbody-leads');
+    if (tbodyLeads) {
+        tbodyLeads.addEventListener('change', (e) => {
+            const sel = e.target.closest('select[data-lead-id]');
+            if (!sel) return;
+            const id = parseInt(sel.dataset.leadId);
+            atualizarStatusLead(id, sel.value);
+        });
+    }
 }
 
-function switchView(view) {
-    const viewLeads = document.getElementById('view-leads');
-    const viewSeg = document.getElementById('view-seguranca');
-    const menuLinks = document.querySelectorAll('.admin-menu a[data-view]');
+const EXTRA_VIEWS = ['view-leads', 'view-seguranca', 'view-analytics'];
 
+function switchView(view) {
+    const menuLinks = document.querySelectorAll('.admin-menu a[data-view]');
     menuLinks.forEach(a => a.classList.remove('active'));
 
-    // Hide all main content sections
     const mainEl = document.querySelector('.admin-main');
     if (mainEl) {
         Array.from(mainEl.children).forEach(child => {
-            if (child.id !== 'view-leads' && child.id !== 'view-seguranca') {
+            if (!EXTRA_VIEWS.includes(child.id)) {
                 child.style.display = (view === 'imoveis' || !view) ? '' : 'none';
             }
         });
     }
-    if (viewLeads) viewLeads.style.display = 'none';
-    if (viewSeg) viewSeg.style.display = 'none';
+
+    EXTRA_VIEWS.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = 'none';
+    });
 
     if (view === 'leads') {
-        viewLeads.style.display = 'block';
+        document.getElementById('view-leads').style.display = 'block';
         document.querySelector('[data-view="leads"]')?.classList.add('active');
         carregarLeads();
     } else if (view === 'seguranca') {
-        viewSeg.style.display = 'block';
+        document.getElementById('view-seguranca').style.display = 'block';
         document.querySelector('[data-view="seguranca"]')?.classList.add('active');
         load2faStatus();
+    } else if (view === 'analytics') {
+        document.getElementById('view-analytics').style.display = 'block';
+        document.querySelector('[data-view="analytics"]')?.classList.add('active');
+        renderAnalytics();
     } else {
         document.querySelector('[data-view="imoveis"]')?.classList.add('active');
     }
@@ -553,9 +600,8 @@ async function carregarLeads() {
         leadsCache = await res.json();
         renderLeads();
         renderLeadsStats();
-    } catch (err) {
+    } catch {
         tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:#FF8B8B; padding: 40px;">Erro ao carregar leads.</td></tr>`;
-        console.error(err);
     }
 }
 
@@ -599,7 +645,7 @@ function renderLeads() {
                 <td>${preco}</td>
                 <td style="font-size:0.82rem; color:var(--c-text-soft);">${escHtml(l.quartos || '—')} · ${escHtml(l.vagas || '—')}</td>
                 <td>
-                    <select class="form-control" style="padding:6px 10px; font-size:0.8rem; width:auto;" onchange="atualizarStatusLead(${parseInt(l.id)}, this.value)">
+                    <select class="form-control" style="padding:6px 10px; font-size:0.8rem; width:auto;" data-lead-id="${parseInt(l.id)}">
                         <option value="novo" ${l.status === 'novo' ? 'selected' : ''}>Novo</option>
                         <option value="em atendimento" ${l.status === 'em atendimento' ? 'selected' : ''}>Em atendimento</option>
                         <option value="convertido" ${l.status === 'convertido' ? 'selected' : ''}>Convertido</option>
@@ -692,7 +738,7 @@ async function start2faSetup() {
     }
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+function init2faButtons() {
     const btnConfirm = document.getElementById('btn-2fa-confirm');
     if (btnConfirm) {
         btnConfirm.addEventListener('click', async () => {
@@ -748,7 +794,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
                 const data = await res.json();
                 if (data.success) {
-                    showToast('2FA desativado.', 'ok');
+                    showToast('2FA desativado com sucesso.', 'ok');
                     load2faStatus();
                 } else {
                     msg.textContent = data.error || 'Código inválido.';
@@ -760,7 +806,155 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
-});
+}
+
+// ============================ ANALYTICS ============================
+const _charts = {};
+
+function destroyChart(id) {
+    if (_charts[id]) { _charts[id].destroy(); delete _charts[id]; }
+}
+
+function mkChart(id, config) {
+    destroyChart(id);
+    const ctx = document.getElementById(id)?.getContext('2d');
+    if (!ctx) return;
+    _charts[id] = new Chart(ctx, config);
+}
+
+const C = {
+    gold: '#C9A96E',
+    goldLight: 'rgba(201,169,110,0.15)',
+    green: '#4ecdc4',
+    red: '#FF6B6B',
+    blue: '#74b9ff',
+    purple: '#a29bfe',
+    orange: '#fd9644',
+    muted: 'rgba(255,255,255,0.1)',
+    text: 'rgba(255,255,255,0.72)',
+    gridLine: 'rgba(255,255,255,0.06)',
+};
+
+const PALETTE = [C.gold, C.green, C.blue, C.purple, C.orange, C.red, '#ffeaa7', '#dfe6e9'];
+
+const baseOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+        legend: { labels: { color: C.text, font: { family: 'Inter, sans-serif', size: 12 }, boxWidth: 12, padding: 16 } },
+        tooltip: { backgroundColor: '#1a1a2e', titleColor: '#fff', bodyColor: C.text, borderColor: C.muted, borderWidth: 1 }
+    }
+};
+
+const barScales = {
+    x: { ticks: { color: C.text }, grid: { color: C.gridLine }, border: { color: C.gridLine } },
+    y: { ticks: { color: C.text }, grid: { color: C.gridLine }, border: { color: C.gridLine }, beginAtZero: true }
+};
+
+async function renderAnalytics() {
+    const periodo = parseInt(document.getElementById('analytics-periodo')?.value || 30);
+
+    // KPIs
+    const total = imoveisCache.length;
+    const valor = imoveisCache.filter(i => i.status === 'Disponível' || !i.status).reduce((s, i) => s + (parseFloat(i.preco) || 0), 0);
+    document.getElementById('akpi-total').textContent = total;
+    document.getElementById('akpi-valor').textContent = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', notation: 'compact', maximumFractionDigits: 1 }).format(valor);
+
+    // Leads KPIs
+    try {
+        const resLeads = await fetch('/api/leads', { credentials: 'include' });
+        if (resLeads.ok) {
+            const leads = await resLeads.json();
+            const totalLeads = leads.length;
+            const convertidos = leads.filter(l => l.status === 'convertido').length;
+            document.getElementById('akpi-leads').textContent = totalLeads;
+            document.getElementById('akpi-conv').textContent = totalLeads ? Math.round((convertidos / totalLeads) * 100) + '%' : '0%';
+
+            // Chart: Pipeline de leads (bar)
+            const statusMap = {};
+            leads.forEach(l => { statusMap[l.status] = (statusMap[l.status] || 0) + 1; });
+            const statusLabels = { novo: 'Novos', 'em atendimento': 'Em atendimento', convertido: 'Convertidos', descartado: 'Descartados' };
+            mkChart('chart-leads-status', {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(statusLabels).map(k => statusLabels[k]),
+                    datasets: [{
+                        label: 'Leads',
+                        data: Object.keys(statusLabels).map(k => statusMap[k] || 0),
+                        backgroundColor: [C.blue, C.gold, C.green, C.red],
+                        borderRadius: 6,
+                    }]
+                },
+                options: { ...baseOptions, plugins: { ...baseOptions.plugins, legend: { display: false } }, scales: barScales }
+            });
+
+            // Chart: High ticket donut — usa classificacao (campo real do DB)
+            const ht = leads.filter(l => l.classificacao === 'High Ticket').length;
+            const nht = totalLeads - ht;
+            mkChart('chart-leads-ht', {
+                type: 'doughnut',
+                data: {
+                    labels: ['High Ticket', 'Regular'],
+                    datasets: [{ data: [ht, nht], backgroundColor: [C.gold, C.muted], borderColor: 'transparent', hoverOffset: 6 }]
+                },
+                options: { ...baseOptions, cutout: '68%' }
+            });
+        }
+    } catch { /* não autenticado */ }
+
+    // Chart: Imóveis por tipo (donut)
+    const tiposMap = {};
+    imoveisCache.forEach(i => { tiposMap[i.tipo] = (tiposMap[i.tipo] || 0) + 1; });
+    mkChart('chart-tipo', {
+        type: 'doughnut',
+        data: {
+            labels: Object.keys(tiposMap),
+            datasets: [{ data: Object.values(tiposMap), backgroundColor: PALETTE, borderColor: 'transparent', hoverOffset: 6 }]
+        },
+        options: { ...baseOptions, cutout: '65%' }
+    });
+
+    // Chart: Imóveis por status (donut)
+    const statusImap = { 'Disponível': 0, 'Vendido': 0, 'Reservado': 0 };
+    imoveisCache.forEach(i => { const s = i.status || 'Disponível'; if (s in statusImap) statusImap[s]++; });
+    mkChart('chart-status', {
+        type: 'doughnut',
+        data: {
+            labels: ['Disponível', 'Vendido', 'Reservado'],
+            datasets: [{ data: Object.values(statusImap), backgroundColor: [C.green, C.red, C.gold], borderColor: 'transparent', hoverOffset: 6 }]
+        },
+        options: { ...baseOptions, cutout: '65%' }
+    });
+
+    // Chart: Top imóveis por visualizações
+    try {
+        const resAnalytics = await fetch(`/api/tracking/analytics?days=${periodo}`, { credentials: 'include' });
+        if (resAnalytics.ok) {
+            const analyticsData = await resAnalytics.json();
+            const top = (analyticsData.topProperties || []).slice(0, 6);
+            if (top.length) {
+                mkChart('chart-top-views', {
+                    type: 'bar',
+                    data: {
+                        labels: top.map(p => p.titulo?.length > 22 ? p.titulo.substring(0, 22) + '…' : (p.titulo || 'Imóvel')),
+                        datasets: [{
+                            label: 'Visualizações',
+                            data: top.map(p => p.views),
+                            backgroundColor: C.goldLight,
+                            borderColor: C.gold,
+                            borderWidth: 2,
+                            borderRadius: 6,
+                        }]
+                    },
+                    options: { ...baseOptions, plugins: { ...baseOptions.plugins, legend: { display: false } }, scales: barScales }
+                });
+            } else {
+                const el = document.getElementById('chart-top-views');
+                if (el) el.parentElement.innerHTML = '<p style="text-align:center; color:var(--c-text-mute); padding:40px 0;">Nenhum dado de visualização ainda.</p>';
+            }
+        }
+    } catch { /* silencioso */ }
+}
 
 // ============================ TOAST ============================
 function showToast(msg, type = 'ok') {

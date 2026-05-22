@@ -1,6 +1,31 @@
 /* ============================================================
    REGINALDO IMÓVEIS — DESIGN SYSTEM PREMIUM v2
    Estética: Luxo discreto + Editorial moderno
+   ============================================================
+   ÍNDICE:
+   01. Custom Properties (Design tokens)
+   02. Reset & Base
+   03. Typography
+   04. Layout & Grid
+   05. Header & Navigation
+   06. Hero
+   07. Search Bar
+   08. Ticker / Marquee
+   09. Property Grid & Cards
+   10. Favoritos
+   11. Skeleton Loader
+   12. Filtros / Chips
+   13. Carousel Dots
+   14. Captação Form
+   15. Accordion / FAQ
+   16. CTA Banner
+   17. Footer
+   18. Detalhes do Imóvel
+   19. Admin Panel
+   20. Floating WhatsApp
+   21. LGPD Banner
+   22. Animations & Reveal
+   23. Responsive (Mobile / Tablet)
    ============================================================ */
 
 @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:ital,wght@0,500;0,600;0,700;0,800;1,500&display=swap');
@@ -71,7 +96,14 @@
    ============================================================ */
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
-html { scroll-behavior: smooth; }
+html {
+  scroll-behavior: smooth;
+  /* FIX MOBILE OVERFLOW: impede scroll horizontal no nível do root —
+     body sozinho não basta no iOS Safari quando há camadas GPU (will-change/fixed) */
+  overflow-x: hidden;
+  /* Desativa rubber-band horizontal no iOS (evita sensação de "bambo") */
+  overscroll-behavior-x: none;
+}
 
 body {
   font-family: var(--font-sans);
@@ -82,9 +114,15 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
+  /* Reforça no body também para compatibilidade cross-browser */
+  overscroll-behavior-x: none;
+  /* Garante que o body nunca excede a largura do viewport */
+  max-width: 100vw;
 }
 
 img { max-width: 100%; height: auto; display: block; }
+/* Garante que mídias e elementos substituídos nunca ultrapassam seu container */
+img, video, iframe, embed, object, svg { max-width: 100%; }
 a { text-decoration: none; color: inherit; transition: color var(--t-fast); }
 ul, ol { list-style: none; }
 button { font-family: inherit; cursor: pointer; border: none; background: none; }
@@ -239,16 +277,18 @@ h1, h2, h3, h4, h5, h6 {
   right: 0;
   z-index: 1000;
   padding: 18px 0;
-  background: rgba(10, 10, 11, 0.65);
-  backdrop-filter: blur(24px) saturate(180%);
-  -webkit-backdrop-filter: blur(24px) saturate(180%);
-  border-bottom: 1px solid var(--c-line-soft);
+  background: #F0C000;
+  border-bottom: 1px solid rgba(0,0,0,0.12);
   transition: all var(--t);
+  /* FIX MOBILE: width:100% explícito + translateZ(0) garante que o header fixo
+     nunca se estenda além da viewport nem cause shift lateral no iOS Safari */
+  width: 100%;
+  transform: translateZ(0);
 }
 
 .header.scrolled {
   padding: 12px 0;
-  background: rgba(10, 10, 11, 0.92);
+  background: #F0C000;
 }
 
 .header .container {
@@ -265,7 +305,7 @@ h1, h2, h3, h4, h5, h6 {
   font-size: 1.7rem;
   font-weight: 700;
   letter-spacing: -0.02em;
-  color: var(--c-white);
+  color: #000000;
 }
 .logo .dot {
   display: inline-block;
@@ -282,7 +322,7 @@ h1, h2, h3, h4, h5, h6 {
   font-weight: 500;
   letter-spacing: 0.3em;
   text-transform: uppercase;
-  color: var(--c-gold);
+  color: #ffffff;
 }
 
 .nav-links {
@@ -295,23 +335,32 @@ h1, h2, h3, h4, h5, h6 {
   padding: 10px 18px;
   font-size: 0.92rem;
   font-weight: 500;
-  color: var(--c-text-soft);
+  color: rgba(0, 0, 0, 0.65);
   border-radius: var(--radius-full);
   transition: color var(--t-fast);
 }
-.nav-links a:hover, .nav-links a.active { color: var(--c-gold); }
+.nav-links a:hover { color: #000000; }
+.nav-links a.active { color: #ffffff; }
 .nav-links a.active::before {
   content: '';
   position: absolute;
   inset: 0;
   border-radius: var(--radius-full);
-  border: 1px solid var(--c-line);
-  background: var(--c-surface);
+  border: none;
+  background: #1a1a1f;
 }
 .nav-links a span { position: relative; z-index: 1; }
 
 .nav-cta {
   margin-left: 18px;
+  color: #000000 !important;
+  border-color: rgba(0,0,0,0.5) !important;
+  background: transparent !important;
+}
+.nav-cta:hover {
+  background: #000000 !important;
+  color: #F0C000 !important;
+  border-color: #000000 !important;
 }
 
 /* NAV DROPDOWN */
@@ -325,7 +374,7 @@ h1, h2, h3, h4, h5, h6 {
   padding: 10px 18px;
   font-size: 0.92rem;
   font-weight: 500;
-  color: var(--c-text);
+  color: rgba(0, 0, 0, 0.65);
   background: none;
   border: none;
   border-radius: var(--radius-full);
@@ -333,7 +382,7 @@ h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-sans);
   transition: color var(--t-fast);
 }
-.nav-dropdown-trigger:hover { color: var(--c-gold); }
+.nav-dropdown-trigger:hover { color: #000000; }
 .nav-dropdown-trigger svg {
   transition: transform 0.25s var(--ease);
   opacity: 0.6;
@@ -384,12 +433,12 @@ h1, h2, h3, h4, h5, h6 {
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  background: var(--c-surface);
-  border: 1px solid var(--c-line);
-  color: var(--c-gold);
-  transition: background var(--t);
+  background: transparent;
+  border: none;
+  color: #000000;
+  transition: opacity var(--t-fast);
 }
-.mobile-search-btn:hover { background: var(--c-surface-2); }
+.mobile-search-btn:hover { opacity: 0.6; }
 
 .mobile-menu-btn {
   display: none;
@@ -398,9 +447,9 @@ h1, h2, h3, h4, h5, h6 {
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  background: var(--c-surface);
-  border: 1px solid var(--c-line);
-  color: var(--c-text);
+  background: transparent;
+  border: none;
+  color: #000000;
 }
 
 /* ============================================================
@@ -412,7 +461,9 @@ h1, h2, h3, h4, h5, h6 {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 140px 0 80px;
+  /* Aumentado bottom de 80 → 100px para absorver o espaço extra
+     criado pelo margin-bottom do .hero-ctas */
+  padding: 140px 0 100px;
   overflow: hidden;
   isolation: isolate;
 }
@@ -421,12 +472,18 @@ h1, h2, h3, h4, h5, h6 {
   position: absolute;
   inset: 0;
   z-index: -2;
+  /* FIX: clip-path força recorte no nível de GPU — garante que a imagem
+     escalada/animada não vaze para além do hero mesmo em iOS Safari */
+  clip-path: inset(0);
+  overflow: hidden;
 }
 .hero-bg img {
   width: 100%; height: 100%; object-fit: cover;
   transform: scale(1.05);
   filter: brightness(0.55) saturate(0.85);
   animation: heroZoom 18s var(--ease-out) infinite alternate;
+  /* GPU layer: prevents main thread repaints during continuous zoom animation */
+  will-change: transform;
 }
 @keyframes heroZoom {
   from { transform: scale(1.05) translateY(0); }
@@ -506,9 +563,21 @@ h1, h2, h3, h4, h5, h6 {
   font-size: clamp(1rem, 1.5vw, 1.22rem);
   color: var(--c-text-soft);
   max-width: 660px;
-  margin: 0 auto 44px;
+  margin: 0 auto 36px;
   line-height: 1.65;
   animation: fadeUp 1.2s 0.3s var(--ease) both;
+}
+
+/* CTA buttons row — centraliza e cria respiro visual antes da search bar */
+.hero-ctas {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  /* margin-bottom cria o espaço que "empurra" a barra de busca para baixo */
+  margin-bottom: 52px;
+  animation: fadeUp 1.25s 0.38s var(--ease) both;
 }
 
 @keyframes fadeUp {
@@ -696,9 +765,14 @@ h1, h2, h3, h4, h5, h6 {
   border: 1px solid var(--c-line);
   border-radius: var(--radius-lg);
   overflow: hidden;
-  transition: all var(--t);
+  /* PERF: specific props instead of 'all' — eliminates full-style reflow on hover */
+  transition: transform var(--t), border-color var(--t), box-shadow var(--t);
   display: flex;
   flex-direction: column;
+  /* PERF: contain painting to this card's bounds */
+  contain: layout style;
+  /* GPU promotion for hover translateY */
+  will-change: transform;
 }
 .imovel-card:hover {
   transform: translateY(-6px);
@@ -1196,30 +1270,38 @@ h1, h2, h3, h4, h5, h6 {
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 10px 32px rgba(37, 211, 102, 0.45);
+  /* Sombra mais discreta — antes era muito chamativa (0.45 opacity) */
+  box-shadow: 0 6px 22px rgba(37, 211, 102, 0.28);
   z-index: 999;
-  transition: transform var(--t);
-  animation: floatY 3s ease-in-out infinite;
+  transition: transform 0.35s var(--ease), box-shadow 0.35s var(--ease);
+  /* FIX: floatY moved to .wpp-flutuante-wrap so hover transform works correctly */
 }
 @keyframes floatY {
   0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-6px); }
+  /* Amplitude reduzida de -6px → -4px: flutuação mais suave e discreta */
+  50%       { transform: translateY(-4px); }
 }
-.wpp-flutuante:hover { transform: scale(1.1); }
+/* Hover premium: escala reduzida (1.08 vs 1.12), sombra comedida */
+.wpp-flutuante:hover {
+  transform: scale(1.08);
+  box-shadow: 0 10px 32px rgba(37, 211, 102, 0.38);
+}
 .wpp-flutuante svg { width: 30px; height: 30px; }
+/* Removida a animação ripple piscante — substituída por anel de hover estático */
 .wpp-flutuante::after {
   content: '';
   position: absolute;
-  inset: -6px;
+  inset: -5px;
   border-radius: 50%;
-  border: 2px solid var(--c-whatsapp);
+  border: 1.5px solid rgba(37, 211, 102, 0.40);
   opacity: 0;
-  animation: ripple 2.5s ease-out infinite;
+  /* Sem animation — ativa apenas no hover, de forma suave */
+  transition: opacity 0.4s var(--ease);
 }
-@keyframes ripple {
-  0%   { transform: scale(0.9); opacity: 1; }
-  100% { transform: scale(1.4); opacity: 0; }
+.wpp-flutuante:hover::after {
+  opacity: 1;
 }
+/* keyframes ripple removido — deixava o botão muito chamativo */
 
 /* ============================================================
    PÁGINA DETALHES
@@ -2170,6 +2252,10 @@ select.form-control { cursor: pointer; appearance: none; background-image: url("
   z-index: 3000;
   opacity: 0;
   transition: all var(--t);
+  /* FIX MOBILE: limita largura para que translateX(-50%) não crie scroll horizontal
+     em viewports estreitos — o elemento nunca excede a tela */
+  width: max-content;
+  max-width: calc(100vw - 2rem);
 }
 .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
 .toast.ok { border-color: var(--c-success); color: #4ADE80; }
@@ -2185,6 +2271,13 @@ select.form-control { cursor: pointer; appearance: none; background-image: url("
   position: relative;
   border-top: 1px solid rgba(196,162,107,0.25);
   border-bottom: 1px solid rgba(0,0,0,0.12);
+  /* FIX MOBILE: contain:paint cria contexto de renderização isolado — garante que
+     a faixa marquee (inline-flex 4000px+) seja clipada pelo overflow:hidden mesmo
+     quando o navegador promove o filho (.marquee-track) a camada GPU separada */
+  contain: paint;
+  /* transform:translateZ(0) promove .marquee-belt ao compositor, tornando o
+     overflow:hidden efetivo para clipping de camadas filhas (iOS Safari fix) */
+  transform: translateZ(0);
 }
 
 .marquee-track {
@@ -2870,11 +2963,21 @@ select.cap-form-control option { background: #1A1A22; color: #EDEDEF; }
   position: fixed;
   bottom: 28px;
   right: 28px;
+  /* iOS safe area: evita que o botão fique sob a home indicator */
+  bottom: max(28px, calc(env(safe-area-inset-bottom, 0px) + 16px));
+  right: max(28px, env(safe-area-inset-right, 28px));
   z-index: 999;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 8px;
+  /* FIX: floatY animation moved here so button hover is not overridden */
+  /* Duração aumentada de 3s → 5s: flutuação muito mais suave e premium */
+  animation: floatY 5s ease-in-out infinite;
+  will-change: transform;
+  /* contain:layout isola o layout deste elemento fixo para não afetar o reflow
+     dos demais elementos durante a animação contínua */
+  contain: layout style;
 }
 .wpp-flutuante-wrap .wpp-flutuante {
   position: static;
@@ -2901,7 +3004,9 @@ select.cap-form-control option { background: #1A1A22; color: #EDEDEF; }
   bottom: 24px;
   left: 24px;
   z-index: 1000;
-  max-width: 420px;
+  /* FIX MOBILE: impede que o banner extrapole a tela em dispositivos < 468px */
+  max-width: min(420px, calc(100vw - 48px));
+  width: min(420px, calc(100vw - 48px));
   background: var(--c-surface);
   border: 1px solid var(--c-line);
   border-radius: var(--radius-lg);
@@ -2975,6 +3080,196 @@ select.cap-form-control option { background: #1A1A22; color: #EDEDEF; }
 }
 
 /* ============================================================
+   SKELETON LOADER PREMIUM
+   ============================================================ */
+@keyframes shimmer {
+  0%   { background-position: -1200px 0; }
+  100% { background-position:  1200px 0; }
+}
+
+.skeleton-card {
+  pointer-events: none;
+  user-select: none;
+}
+.skeleton-card .imovel-img-wrap {
+  background: linear-gradient(90deg, var(--c-surface) 25%, var(--c-surface-2) 50%, var(--c-surface) 75%);
+  background-size: 2400px 100%;
+  animation: shimmer 1.6s ease-in-out infinite;
+}
+.skeleton-img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16/10;
+  background: linear-gradient(90deg, var(--c-surface) 25%, var(--c-surface-2) 50%, var(--c-surface) 75%);
+  background-size: 2400px 100%;
+  animation: shimmer 1.6s ease-in-out infinite;
+}
+.skeleton-line {
+  display: block;
+  border-radius: 6px;
+  background: linear-gradient(90deg, var(--c-surface) 25%, var(--c-surface-2) 50%, var(--c-surface) 75%);
+  background-size: 2400px 100%;
+  animation: shimmer 1.6s ease-in-out infinite;
+}
+.skeleton-card:nth-child(2) .skeleton-img,
+.skeleton-card:nth-child(2) .imovel-img-wrap,
+.skeleton-card:nth-child(2) .skeleton-line { animation-delay: 0.15s; }
+.skeleton-card:nth-child(3) .skeleton-img,
+.skeleton-card:nth-child(3) .imovel-img-wrap,
+.skeleton-card:nth-child(3) .skeleton-line { animation-delay: 0.30s; }
+.skeleton-card:nth-child(4) .skeleton-img,
+.skeleton-card:nth-child(4) .imovel-img-wrap,
+.skeleton-card:nth-child(4) .skeleton-line { animation-delay: 0.45s; }
+.skeleton-card:nth-child(5) .skeleton-img,
+.skeleton-card:nth-child(5) .imovel-img-wrap,
+.skeleton-card:nth-child(5) .skeleton-line { animation-delay: 0.60s; }
+.skeleton-card:nth-child(6) .skeleton-img,
+.skeleton-card:nth-child(6) .imovel-img-wrap,
+.skeleton-card:nth-child(6) .skeleton-line { animation-delay: 0.75s; }
+
+/* Skeleton para detalhes do imóvel */
+.detalhes-skeleton { padding: 60px 0; }
+.detalhes-skeleton .sk-block {
+  border-radius: var(--radius);
+  background: linear-gradient(90deg, var(--c-surface) 25%, var(--c-surface-2) 50%, var(--c-surface) 75%);
+  background-size: 2400px 100%;
+  animation: shimmer 1.6s ease-in-out infinite;
+}
+.detalhes-skeleton .sk-title { height: 56px; width: 68%; margin-bottom: 20px; }
+.detalhes-skeleton .sk-sub { height: 20px; width: 40%; margin-bottom: 40px; }
+.detalhes-skeleton .sk-img { width: 100%; aspect-ratio: 16/9; border-radius: var(--radius-xl); margin-bottom: 40px; }
+.detalhes-skeleton .sk-line { height: 14px; margin-bottom: 10px; }
+.detalhes-skeleton .sk-line.w-full { width: 100%; }
+.detalhes-skeleton .sk-line.w-3q { width: 75%; }
+.detalhes-skeleton .sk-line.w-half { width: 50%; }
+
+/* ============================================================
+   IMAGE LAZY LOAD BLUR-UP
+   ============================================================ */
+.imovel-img.lazy-blur { opacity: 0; }
+.imovel-img.lazy-blur.loaded {
+  opacity: 1;
+  transition: transform 1.2s var(--ease-out), opacity 0.6s ease;
+}
+
+/* ============================================================
+   GRID LOADING STATE
+   ============================================================ */
+.grid-imoveis.grid-loading {
+  opacity: 0.35;
+  pointer-events: none;
+}
+#btn-buscar.loading svg { animation: spin 0.6s linear infinite; }
+
+/* ============================================================
+   CARD GOLD ACCENT ON HOVER + STAGGER ENTRY ANIMATION
+   ============================================================ */
+.imovel-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--c-wine), var(--c-gold));
+  opacity: 0;
+  transition: opacity var(--t);
+  z-index: 10;
+}
+.imovel-card:hover::before { opacity: 1; }
+
+/* FIX: @keyframes was never defined — cards had delays but no actual animation */
+@keyframes cardEnter {
+  from {
+    opacity: 0;
+    transform: translateY(24px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+/* Base animation on the class (was missing — only delays existed, no animation) */
+.imovel-card.card-enter {
+  animation: cardEnter 0.55s var(--ease-out) both;
+}
+.imovel-card.card-enter:nth-child(2) { animation-delay: 0.07s; }
+.imovel-card.card-enter:nth-child(3) { animation-delay: 0.14s; }
+.imovel-card.card-enter:nth-child(4) { animation-delay: 0.21s; }
+.imovel-card.card-enter:nth-child(5) { animation-delay: 0.28s; }
+.imovel-card.card-enter:nth-child(6) { animation-delay: 0.35s; }
+
+/* ============================================================
+   FAVORITE BUTTON HEARTBEAT
+   ============================================================ */
+@keyframes heartBeat {
+  0%   { transform: scale(1); }
+  25%  { transform: scale(1.35); }
+  50%  { transform: scale(0.88); }
+  75%  { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+.btn-fav.just-favorited { animation: heartBeat 0.5s var(--ease) both; }
+
+/* ============================================================
+   SCROLL TO TOP BUTTON
+   ============================================================ */
+.btn-scroll-top {
+  position: fixed;
+  bottom: 104px;
+  right: 28px;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--c-surface);
+  border: 1px solid var(--c-line);
+  color: var(--c-text-soft);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 997;
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity var(--t), transform var(--t), background var(--t-fast), color var(--t-fast), border-color var(--t-fast);
+  pointer-events: none;
+  box-shadow: var(--shadow-2);
+  will-change: opacity, transform;
+}
+.btn-scroll-top.visible {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+.btn-scroll-top:hover {
+  background: var(--c-gold);
+  color: var(--c-bg);
+  border-color: var(--c-gold);
+}
+
+/* ============================================================
+   SEARCH CLEAR BUTTON
+   ============================================================ */
+.search-clear-btn {
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--c-line);
+  color: var(--c-text-soft);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border: none;
+  transition: background var(--t-fast), color var(--t-fast);
+  z-index: 5;
+}
+.search-clear-btn:hover { background: var(--c-gold); color: var(--c-bg); }
+.search-clear-btn.visible { display: flex; }
+
+/* ============================================================
    RESPONSIVE
    ============================================================ */
 @media (max-width: 1024px) {
@@ -2996,7 +3291,7 @@ select.cap-form-control option { background: #1A1A22; color: #EDEDEF; }
 @media (max-width: 768px) {
   .container { padding: 0 20px; }
 
-  .nav-links { display: none; flex-direction: column; position: absolute; top: 100%; left: 0; right: 0; background: var(--c-bg); padding: 16px 20px; border-bottom: 1px solid var(--c-line); gap: 4px; z-index: 100; }
+  .nav-links { display: none; flex-direction: column; position: absolute; top: 100%; left: 0; right: 0; width: 100%; overflow: hidden; background: #F0C000; padding: 16px 20px; border-bottom: 1px solid rgba(0,0,0,0.12); gap: 4px; z-index: 100; }
   .nav-links.open { display: flex; }
   .nav-cta { display: none; }
   .nav-dropdown { width: 100%; }
@@ -3004,7 +3299,8 @@ select.cap-form-control option { background: #1A1A22; color: #EDEDEF; }
   .nav-dropdown-menu { position: static; transform: none; background: var(--c-surface); border-radius: var(--radius); margin: 4px 0 4px 16px; min-width: unset; box-shadow: none; }
   .nav-dropdown.open .nav-dropdown-menu { display: flex; }
   .mobile-menu-btn { display: inline-flex; }
-  .mobile-search-btn { display: inline-flex; margin-right: -4px; }
+  /* FIX: margem negativa removida — causava micro deslocamento lateral na navbar */
+  .mobile-search-btn { display: inline-flex; margin-right: 0; }
   .header .container { gap: 10px; }
   .logo { flex: 1; }
 
@@ -3015,6 +3311,10 @@ select.cap-form-control option { background: #1A1A22; color: #EDEDEF; }
     top: 72px;
     left: 0;
     right: 0;
+    /* FIX: width:100% + overflow:hidden garante que a barra de busca fixa
+       não vaze para além da viewport durante a animação de entrada */
+    width: 100%;
+    overflow: hidden;
     z-index: 150;
     background: var(--c-bg);
     border-bottom: 1px solid var(--c-line);
@@ -3024,11 +3324,19 @@ select.cap-form-control option { background: #1A1A22; color: #EDEDEF; }
   }
   .search-bar.mobile-open { display: grid; }
 
-  .hero { padding: 110px 0 60px; min-height: 85vh; }
+  .hero { padding: 110px 0 70px; min-height: 85vh; }
   .hero h1 { font-size: clamp(2rem, 5.2vw, 3.2rem); }
-  .hero-sub { font-size: clamp(0.9rem, 1.3vw, 1.1rem); }
+  .hero-sub { font-size: clamp(0.9rem, 1.3vw, 1.1rem); margin-bottom: 28px; }
   .hero-content { padding: 0 20px; overflow: hidden; }
-  .hero-stats { gap: 0; margin-top: 40px; flex-wrap: nowrap; justify-content: center; width: 100%; }
+  /* CTA buttons em coluna no mobile — mais fáceis de tocar */
+  .hero-ctas {
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 36px;
+  }
+  .hero-ctas .btn { width: 100%; max-width: 300px; justify-content: center; }
+  .hero-stats { gap: 0; margin-top: 36px; flex-wrap: nowrap; justify-content: center; width: 100%; overflow: hidden; max-width: 100%; }
   .hero-stat .num { font-size: 2rem; }
   .hero-stat .lbl { font-size: 0.75rem; letter-spacing: 0.08em; }
   .hero-stat-divider { height: 26px; margin: 0 14px; }
@@ -3073,6 +3381,9 @@ select.cap-form-control option { background: #1A1A22; color: #EDEDEF; }
     gap: 16px;
     padding-bottom: 12px;
     scrollbar-width: none;
+    /* FIX: contain:paint isola o carousel — os cards que estendem além da viewport
+       são clipados corretamente, sem vazar para o scroll horizontal da página */
+    contain: paint;
   }
   .grid-imoveis::-webkit-scrollbar { display: none; }
   .grid-imoveis .imovel-card {
@@ -3080,6 +3391,8 @@ select.cap-form-control option { background: #1A1A22; color: #EDEDEF; }
     max-width: 85vw;
     scroll-snap-align: center;
     flex-shrink: 0;
+    /* No hover on mobile — remove GPU reservation */
+    will-change: auto;
   }
 
   /* Filter chips horizontal scroll on mobile */
@@ -3118,6 +3431,8 @@ select.cap-form-control option { background: #1A1A22; color: #EDEDEF; }
     right: 16px;
     bottom: 20px;
     align-items: flex-end;
+    /* PERF: disable float animation on mobile — saves GPU on mid-range devices */
+    animation: none;
   }
   .wpp-flutuante-wrap .wpp-microcopy {
     display: none;
@@ -3125,10 +3440,33 @@ select.cap-form-control option { background: #1A1A22; color: #EDEDEF; }
   .wpp-flutuante-wrap .wpp-flutuante {
     width: 44px;
     height: 44px;
-    animation: none;
     box-shadow: 0 4px 16px rgba(37, 211, 102, 0.35);
   }
   .wpp-flutuante-wrap .wpp-flutuante svg { width: 24px; height: 24px; }
+
+  /* PERF: Remove expensive backdrop-filter from card badges on mobile */
+  /* Each card had 3-4 backdrop-filter layers — kills GPU on mid-range Android */
+  .badge-tipo,
+  .badge-finalidade,
+  .badge-proof,
+  .btn-fav,
+  .badge-status {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+  .badge-tipo { background: rgba(10, 10, 11, 0.90); }
+  .badge-status { background: rgba(10, 10, 11, 0.90); }
+  .badge-status.vendido { background: rgba(239, 68, 68, 0.92); }
+  .badge-status.reservado { background: rgba(245, 158, 11, 0.92); }
+  .badge-finalidade.venda { background: rgba(123, 25, 41, 0.92); }
+  .badge-finalidade.locacao { background: rgba(34, 197, 94, 0.92); }
+  .badge-proof { background: rgba(212, 176, 122, 0.95); }
+  .btn-fav { background: rgba(10, 10, 11, 0.88); }
+
+  #btn-ver-mais { max-width: calc(100% - 72px); }
+
+  /* Scroll to top — posição mobile */
+  .btn-scroll-top { bottom: 80px; right: 16px; width: 42px; height: 42px; }
 
   .footer-grid { grid-template-columns: 1fr; gap: 36px; }
   .footer-bottom { flex-direction: column; text-align: center; }

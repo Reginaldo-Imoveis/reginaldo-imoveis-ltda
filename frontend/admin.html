@@ -6,7 +6,8 @@
     <title>Painel Admin · Reginaldo Imóveis</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="stylesheet" href="/css/style.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%23B8860B'/><text y='23' x='16' text-anchor='middle' font-size='20' fill='white' font-family='Georgia,serif' font-weight='bold'>R</text></svg>">
+    <link rel="stylesheet" href="/css/style.css?v=11">
 </head>
 <body class="admin-body">
 
@@ -62,6 +63,10 @@
                     <a href="#" data-view="leads" id="link-leads">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
                         Leads
+                    </a>
+                    <a href="#" data-view="analytics" id="link-analytics">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+                        Analytics
                     </a>
                     <a href="#" data-view="seguranca" id="link-seguranca">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
@@ -243,6 +248,67 @@
                     </div>
                 </div>
 
+                <!-- ======================= ANALYTICS ======================= -->
+                <div id="view-analytics" style="display:none;">
+                    <div class="admin-topbar">
+                        <div>
+                            <h1>Analytics <em style="font-style:italic; font-family:var(--font-serif); color:var(--c-gold);">do portfólio</em></h1>
+                            <span class="topbar-sub">Visão geral do seu estoque e pipeline de leads.</span>
+                        </div>
+                        <div class="topbar-actions">
+                            <select id="analytics-periodo" class="form-control" style="width:auto; padding:10px 14px; font-size:.86rem;">
+                                <option value="30">Últimos 30 dias</option>
+                                <option value="60">Últimos 60 dias</option>
+                                <option value="90">Últimos 90 dias</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="admin-stats" id="analytics-kpis">
+                        <div class="stat-card"><div class="label">Total de imóveis</div><div class="val" id="akpi-total">—</div></div>
+                        <div class="stat-card"><div class="label">Valor total em vitrine</div><div class="val" id="akpi-valor">—</div></div>
+                        <div class="stat-card"><div class="label">Total de leads</div><div class="val" id="akpi-leads">—</div></div>
+                        <div class="stat-card"><div class="label">Taxa de conversão</div><div class="val" id="akpi-conv">—</div></div>
+                    </div>
+
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:24px; margin-bottom:24px;">
+                        <div class="admin-card">
+                            <div class="admin-card-head"><h3>Imóveis por tipo</h3></div>
+                            <div style="padding:24px; position:relative; height:280px; display:flex; align-items:center; justify-content:center;">
+                                <canvas id="chart-tipo"></canvas>
+                            </div>
+                        </div>
+                        <div class="admin-card">
+                            <div class="admin-card-head"><h3>Imóveis por status</h3></div>
+                            <div style="padding:24px; position:relative; height:280px; display:flex; align-items:center; justify-content:center;">
+                                <canvas id="chart-status"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="display:grid; grid-template-columns:1.5fr 1fr; gap:24px; margin-bottom:24px;">
+                        <div class="admin-card">
+                            <div class="admin-card-head"><h3>Pipeline de leads</h3></div>
+                            <div style="padding:24px; position:relative; height:260px;">
+                                <canvas id="chart-leads-status"></canvas>
+                            </div>
+                        </div>
+                        <div class="admin-card">
+                            <div class="admin-card-head"><h3>Leads high ticket</h3></div>
+                            <div style="padding:24px; position:relative; height:260px; display:flex; align-items:center; justify-content:center;">
+                                <canvas id="chart-leads-ht"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="admin-card">
+                        <div class="admin-card-head"><h3>Imóveis mais visualizados</h3></div>
+                        <div style="padding:24px; position:relative; height:260px;">
+                            <canvas id="chart-top-views"></canvas>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- ======================= SEGURANÇA / 2FA ======================= -->
                 <div id="view-seguranca" style="display:none;">
                     <div class="admin-topbar">
@@ -355,6 +421,11 @@
                             <input type="number" id="areaTotal" class="form-control" value="0" min="0" step="0.1">
                         </div>
                         <div class="form-group full">
+                            <label class="form-label">Bairro / Região</label>
+                            <input type="text" id="bairro" class="form-control" placeholder="Ex: Mooca, Vila Mariana, Jardim Avelino…">
+                            <small style="color: var(--c-text-mute);">Exibido nos cards e na página do imóvel · Opcional</small>
+                        </div>
+                        <div class="form-group full">
                             <label class="form-label">Imagem de destaque</label>
                             <input type="file" id="imagem" class="form-control" accept="image/*">
                             <small style="color: var(--c-text-mute);">Formatos: JPG, PNG · Recomendado 1200×800px</small>
@@ -410,6 +481,7 @@
     <!-- Toast -->
     <div id="toast" class="toast"></div>
 
-    <script src="/js/admin.js?v=3"></script>
+    <script src="/js/chart.umd.min.js"></script>
+    <script src="/js/admin.js?v=9"></script>
 </body>
 </html>

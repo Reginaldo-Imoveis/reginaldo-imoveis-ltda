@@ -7,7 +7,8 @@
     <meta name="description" content="Reginaldo Imóveis — Curadoria exclusiva de imóveis de alto padrão em São Paulo. Atendimento personalizado e negócios com segurança total. CRECI 17407-J.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="stylesheet" href="/css/style.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%23B8860B'/><text y='23' x='16' text-anchor='middle' font-size='20' fill='white' font-family='Georgia,serif' font-weight='bold'>R</text></svg>">
+    <link rel="stylesheet" href="/css/style.css?v=11">
 
     <!-- Schema.org — RealEstateAgent (SEO) -->
     <script type="application/ld+json">
@@ -78,6 +79,24 @@
     <meta name="theme-color" content="#C4A26B">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+    <!-- Performance: pré-conectar CDN de imagens -->
+    <link rel="dns-prefetch" href="https://images.unsplash.com">
+    <link rel="preconnect" href="https://images.unsplash.com" crossorigin>
+    <!-- LCP critical: preload hero image — tells browser to fetch it before CSS is parsed -->
+    <link rel="preload" as="image" href="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?ixlib=rb-4.0.3&auto=format&fit=crop&w=2400&q=85" fetchpriority="high">
+
+    <!-- Google Analytics 4 — Acesse analytics.google.com, crie uma propriedade e substitua G-XXXXXXXXXX pelo seu Measurement ID -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-XXXXXXXXXX');
+    </script>
+
+    <!-- Microsoft Clarity — Acesse clarity.microsoft.com, crie um projeto e substitua XXXXXXXXXX pelo seu Project ID -->
+    <script>(function(c,l,a,r,i,t,y){c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y)})(window,document,"clarity","script","XXXXXXXXXX")</script>
 </head>
 <body>
 
@@ -91,17 +110,9 @@
             </a>
             <nav class="nav-links">
                 <a href="/" class="active"><span>Início</span></a>
-                <div class="nav-dropdown">
-                    <button class="nav-dropdown-trigger">
-                        <span>Imóveis</span>
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
-                    </button>
-                    <div class="nav-dropdown-menu">
-                        <a href="#imoveis">Ver imóveis</a>
-                        <a href="#captacao">Encontre seu imóvel</a>
-                        <a href="#sobre">Sobre nós</a>
-                    </div>
-                </div>
+                <a href="#imoveis"><span>Imóveis</span></a>
+                <a href="#captacao"><span>Encontre seu imóvel</span></a>
+                <a href="#sobre"><span>Sobre nós</span></a>
                 <a href="/contato"><span>Contato</span></a>
             </nav>
             <a href="https://wa.me/5511953280353?text=Olá!%20Vim%20pelo%20site%20e%20gostaria%20de%20saber%20mais%20sobre%20os%20imóveis%20disponíveis.%20Podem%20me%20ajudar?" target="_blank" rel="noopener noreferrer" class="btn btn-outline-gold btn-sm nav-cta">
@@ -230,6 +241,7 @@
                     <button class="chip active" data-tipo="todos">Todos</button>
                     <button class="chip" data-tipo="Apartamento">Apartamento</button>
                     <button class="chip" data-tipo="Casa">Casa</button>
+                    <button class="chip" data-tipo="Cobertura">Cobertura</button>
                     <button class="chip" data-tipo="Comercial">Comercial</button>
                 </div>
                 <a href="/contato" class="btn btn-ghost btn-sm">
@@ -243,10 +255,10 @@
             </div>
             <div class="carousel-dots" id="carousel-dots"></div>
             <div style="text-align:center; margin-top:48px;">
-                <a href="/imoveis" class="btn btn-ghost">
-                    Ver todos os imóveis
+                <button id="btn-ver-mais" onclick="carregarMais()" class="btn btn-ghost" style="display:none;">
+                    Ver mais imóveis
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-                </a>
+                </button>
             </div>
         </div>
     </section>
@@ -593,8 +605,8 @@
         </div>
     </div>
 
-    <script src="/js/tracker.js" defer></script>
-    <script src="/js/main.js" defer></script>
+    <script src="/js/tracker.js?v=3" defer></script>
+    <script src="/js/main.js?v=5" defer></script>
     <script>if('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');</script>
     <script>
     (function() {

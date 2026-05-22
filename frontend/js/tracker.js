@@ -56,6 +56,8 @@
     }
 
     function getImovelId() {
+        const slugMatch = window.location.pathname.match(/-(\d+)$/);
+        if (slugMatch) return parseInt(slugMatch[1]);
         const params = new URLSearchParams(window.location.search);
         return parseInt(params.get('id')) || null;
     }
@@ -88,7 +90,7 @@
     function trackTimeOnPage() {
         const seconds = Math.round((Date.now() - PAGE_ENTER) / 1000);
         if (seconds > 2) {
-            const data = JSON.stringify({
+            const payload = JSON.stringify({
                 session_id: sessionId,
                 evento: 'time_on_page',
                 dados: JSON.stringify({ seconds, page: window.location.pathname }),
@@ -96,7 +98,7 @@
                 imovel_id: getImovelId(),
                 ts: Date.now()
             });
-            navigator.sendBeacon('/api/tracking/beacon', data);
+            navigator.sendBeacon('/api/tracking/beacon', new Blob([payload], { type: 'application/json' }));
         }
     }
     document.addEventListener('visibilitychange', () => {
@@ -143,8 +145,8 @@
     });
     observer.observe(document.body, { childList: true, subtree: true });
 
-    // 6. Property view (on detail pages)
-    if (window.location.pathname === '/detalhes') {
+    // 6. Property view (on detail pages — /imovel/:slug-:id)
+    if (window.location.pathname.startsWith('/imovel/')) {
         const imovelId = getImovelId();
         if (imovelId) track('property_view', { imovel_id: imovelId });
     }

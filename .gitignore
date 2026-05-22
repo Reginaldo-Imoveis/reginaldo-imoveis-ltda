@@ -4,6 +4,8 @@ node_modules/
 .env
 backend/.totp-secret.json
 backend/database.sqlite
+backend/database.sqlite-shm
+backend/database.sqlite-wal
 
 # Backups automáticos
 backups/

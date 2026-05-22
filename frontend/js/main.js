@@ -5,7 +5,6 @@
 document.addEventListener('DOMContentLoaded', () => {
     initHeaderScroll();
     initMobileMenu();
-    initNavDropdown();
     initMobileSearch();
     initReveal();
     initCounters();
@@ -14,6 +13,8 @@ document.addEventListener('DOMContentLoaded', () => {
     carregarImoveis();
     initCaptacaoInline();
     initAccordion();
+    initScrollTop();
+    initSearchClear();
 });
 
 function initMobileMenu() {
@@ -38,21 +39,6 @@ function initMobileMenu() {
     document.addEventListener('click', (e) => {
         if (!btn.contains(e.target) && !nav.contains(e.target)) {
             closeMenu();
-        }
-    });
-}
-
-function initNavDropdown() {
-    const trigger = document.querySelector('.nav-dropdown-trigger');
-    const dropdown = document.querySelector('.nav-dropdown');
-    if (!trigger || !dropdown) return;
-    trigger.addEventListener('click', (e) => {
-        e.stopPropagation();
-        dropdown.classList.toggle('open');
-    });
-    document.addEventListener('click', (e) => {
-        if (!dropdown.contains(e.target)) {
-            dropdown.classList.remove('open');
         }
     });
 }
@@ -83,7 +69,8 @@ function initMobileSearch() {
     });
 }
 
-// COUNTER animation
+// COUNTER animation — uses requestAnimationFrame for frame-perfect sync
+// Previously used setInterval(16ms) which drifts and causes microjank
 function initCounters() {
     const counters = document.querySelectorAll('.counter[data-target]');
     if (!counters.length) return;
@@ -94,21 +81,20 @@ function initCounters() {
             const el = entry.target;
             const target = parseInt(el.dataset.target, 10);
             const duration = 1800;
-            const frameDuration = 16;
-            const totalFrames = Math.round(duration / frameDuration);
-            let frame = 0;
+            const startTime = performance.now();
 
-            const timer = setInterval(() => {
-                frame++;
-                const progress = frame / totalFrames;
+            function tick(now) {
+                const elapsed = now - startTime;
+                const progress = Math.min(elapsed / duration, 1);
                 const eased = 1 - Math.pow(1 - progress, 3);
                 el.textContent = Math.round(eased * target);
-                if (frame >= totalFrames) {
+                if (progress < 1) {
+                    requestAnimationFrame(tick);
+                } else {
                     el.textContent = target;
-                    clearInterval(timer);
                 }
-            }, frameDuration);
-
+            }
+            requestAnimationFrame(tick);
             observer.unobserve(el);
         });
     }, { threshold: 0.5 });
@@ -116,13 +102,18 @@ function initCounters() {
     counters.forEach(c => observer.observe(c));
 }
 
-// HEADER scroll
+// HEADER scroll — RAF-throttled to avoid triggering layout on every scroll event
 function initHeaderScroll() {
     const header = document.getElementById('site-header');
     if (!header) return;
+    let ticking = false;
     const onScroll = () => {
-        if (window.scrollY > 30) header.classList.add('scrolled');
-        else header.classList.remove('scrolled');
+        if (ticking) return;
+        ticking = true;
+        requestAnimationFrame(() => {
+            header.classList.toggle('scrolled', window.scrollY > 30);
+            ticking = false;
+        });
     };
     window.addEventListener('scroll', onScroll, { passive: true });
     onScroll();
@@ -202,18 +193,37 @@ function initSearch() {
 }
 
 // CARREGAR IMÓVEIS
+const PAGE_SIZE = 6;
+let shownCount = 0;
+
+// AbortController: cancels previous in-flight request when user changes filters quickly
+// Prevents race conditions where a slow response for "Casa" arrives after "Apartamento"
+let _fetchController = null;
+
 async function carregarImoveis() {
     const grid = document.getElementById('grid-imoveis');
     if (!grid) return;
+    shownCount = 0;
+    atualizarBotaoVerMais(0, 0);
 
-    grid.innerHTML = Array.from({ length: 4 }, () => `
+    // Cancel any previous request that hasn't resolved yet
+    if (_fetchController) {
+        _fetchController.abort();
+    }
+    _fetchController = new AbortController();
+
+    const buscarBtn = document.getElementById('btn-buscar');
+    buscarBtn?.classList.add('loading');
+
+    grid.classList.remove('grid-loading');
+    grid.innerHTML = Array.from({ length: 6 }, () => `
         <article class="imovel-card skeleton-card">
-            <div class="skeleton-img"></div>
+            <div class="imovel-img-wrap"></div>
             <div class="imovel-info">
-                <div class="skeleton-line" style="width:40%;height:12px;margin-bottom:10px"></div>
-                <div class="skeleton-line" style="width:75%;height:18px;margin-bottom:14px"></div>
-                <div class="skeleton-line" style="width:60%;height:12px;margin-bottom:20px"></div>
-                <div class="skeleton-line" style="width:50%;height:22px"></div>
+                <div class="skeleton-line" style="width:38%;height:11px;margin-bottom:10px"></div>
+                <div class="skeleton-line" style="width:78%;height:20px;margin-bottom:12px"></div>
+                <div class="skeleton-line" style="width:62%;height:11px;margin-bottom:20px"></div>
+                <div class="skeleton-line" style="width:52%;height:24px"></div>
             </div>
         </article>
     `).join('');
@@ -221,20 +231,19 @@ async function carregarImoveis() {
     try {
         let url = `/api/imoveis?tipo=${encodeURIComponent(currentTipo)}`;
         if (currentBusca) url += `&busca=${encodeURIComponent(currentBusca)}`;
+        if (currentFaixa && currentFaixa !== 'todos') {
+            const [min, max] = currentFaixa.split('-').map(Number);
+            if (!isNaN(min)) url += `&preco_min=${min}`;
+            if (!isNaN(max)) url += `&preco_max=${max}`;
+        }
 
-        const res = await fetch(url);
+        const res = await fetch(url, { signal: _fetchController.signal });
         const json = await res.json();
         let imoveis = Array.isArray(json) ? json : (json.data || []);
         imoveisLoadedCache = imoveis;
 
-        // Filtro de faixa de preço (client-side)
-        if (currentFaixa && currentFaixa !== 'todos') {
-            const [min, max] = currentFaixa.split('-').map(Number);
-            imoveis = imoveis.filter(i => i.preco >= min && i.preco <= max);
-        }
-
+        buscarBtn?.classList.remove('loading');
         grid.innerHTML = '';
-        imoveis = imoveis.slice(0, 6);
 
         if (!imoveis.length) {
             grid.innerHTML = `
@@ -244,13 +253,21 @@ async function carregarImoveis() {
                     <p>Tente ajustar os filtros ou fale com um especialista para uma curadoria sob medida.</p>
                 </div>
             `;
+            atualizarBotaoVerMais(0, 0);
             return;
         }
 
-        imoveis.forEach(imovel => grid.appendChild(criarCard(imovel)));
+        const batch = imoveis.slice(0, PAGE_SIZE);
+        shownCount = batch.length;
+        batch.forEach(imovel => grid.appendChild(criarCard(imovel)));
         atualizarBotoesFavoritos();
-        initCarouselDots(grid, imoveis.length);
+        initCarouselDots(grid, shownCount);
+        atualizarBotaoVerMais(shownCount, imoveis.length);
     } catch (err) {
+        // AbortError is intentional — user changed filters before response arrived
+        if (err.name === 'AbortError') return;
+
+        buscarBtn?.classList.remove('loading');
         const isOffline = err instanceof TypeError && err.message.toLowerCase().includes('fetch');
         const msg = isOffline
             ? 'O servidor não está em execução. Inicie com <code style="background:rgba(255,255,255,0.08);padding:2px 6px;border-radius:3px;">npm start</code> e atualize a página.'
@@ -266,6 +283,28 @@ async function carregarImoveis() {
             </div>
         `;
     }
+}
+
+function atualizarBotaoVerMais(shown, total) {
+    const btn = document.getElementById('btn-ver-mais');
+    if (!btn) return;
+    if (shown >= total || total === 0) {
+        btn.style.display = 'none';
+    } else {
+        btn.style.display = 'inline-flex';
+        btn.textContent = `Ver mais imóveis (${total - shown} restantes)`;
+    }
+}
+
+function carregarMais() {
+    const grid = document.getElementById('grid-imoveis');
+    if (!grid || !imoveisLoadedCache.length) return;
+    const proximos = imoveisLoadedCache.slice(shownCount, shownCount + PAGE_SIZE);
+    proximos.forEach(imovel => grid.appendChild(criarCard(imovel)));
+    shownCount += proximos.length;
+    atualizarBotoesFavoritos();
+    initCarouselDots(grid, shownCount);
+    atualizarBotaoVerMais(shownCount, imoveisLoadedCache.length);
 }
 
 const SOCIAL_PROOF_TAGS = ['Alta procura', 'Novidade', 'Oportunidade', 'Exclusivo'];
@@ -306,13 +345,13 @@ function criarCard(imovel) {
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
             </button>
             <a href="${detalhesUrl}" style="display:block; width:100%; height:100%;">
-                <img class="imovel-img" src="${imgUrl}" alt="${imovel.titulo}" loading="lazy" decoding="async" onerror="this.src='https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=800&auto=format'">
+                <img class="imovel-img lazy-blur" src="${imgUrl}" alt="${imovel.titulo}" loading="lazy" decoding="async" onerror="this.src='https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=800&auto=format';this.classList.add('loaded')">
             </a>
         </div>
         <div class="imovel-info">
             <div class="imovel-loc">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                São Paulo / SP
+                ${imovel.bairro ? imovel.bairro + ' · ' : ''}São Paulo / SP
             </div>
             <h3 class="imovel-titulo"><a href="${detalhesUrl}">${imovel.titulo}</a></h3>
             <div class="imovel-features">
@@ -331,6 +370,18 @@ function criarCard(imovel) {
             </div>
         </div>
     `;
+
+    // Blur-up: add 'loaded' class when image is ready
+    const img = card.querySelector('.lazy-blur');
+    if (img) {
+        if (img.complete && img.naturalWidth) {
+            img.classList.add('loaded');
+        } else {
+            img.addEventListener('load', () => img.classList.add('loaded'), { once: true });
+            img.addEventListener('error', () => img.classList.add('loaded'), { once: true });
+        }
+    }
+
     return card;
 }
 
@@ -394,6 +445,10 @@ function toggleFavorito(event, id) {
     } else {
         favs.push(id);
         btn.classList.add('active');
+        btn.classList.remove('just-favorited');
+        void btn.offsetWidth; // força reflow para reiniciar a animação
+        btn.classList.add('just-favorited');
+        setTimeout(() => btn.classList.remove('just-favorited'), 600);
         const imovelData = imoveisLoadedCache.find(i => i.id === id);
         if (imovelData) saveFavoritoData(id, imovelData);
     }
@@ -543,9 +598,20 @@ function initCaptacaoInline() {
 }
 
 // ===== CAROUSEL DOTS =====
+// Memory leak fix: store cleanup function so the old scroll listener
+// is removed before a new one is added (happens on every carregarImoveis call)
+let _carouselScrollOff = null;
+
 function initCarouselDots(grid, count) {
     const container = document.getElementById('carousel-dots');
     if (!container) return;
+
+    // Remove previous scroll listener to prevent accumulation (was a real leak)
+    if (_carouselScrollOff) {
+        _carouselScrollOff();
+        _carouselScrollOff = null;
+    }
+
     container.innerHTML = '';
     if (count <= 1) return;
 
@@ -562,14 +628,18 @@ function initCarouselDots(grid, count) {
     });
 
     let scrollTimer;
-    grid.addEventListener('scroll', () => {
+    const onScroll = () => {
         clearTimeout(scrollTimer);
         scrollTimer = setTimeout(() => {
             const cardWidth = grid.firstElementChild?.offsetWidth || 1;
             const activeIndex = Math.round(grid.scrollLeft / (cardWidth + 16));
             dots.forEach((dot, i) => dot.classList.toggle('active', i === activeIndex));
         }, 50);
-    }, { passive: true });
+    };
+
+    grid.addEventListener('scroll', onScroll, { passive: true });
+    // Store cleanup so next call can remove this listener
+    _carouselScrollOff = () => grid.removeEventListener('scroll', onScroll);
 }
 
 // ===== ACCORDION =====
@@ -596,5 +666,54 @@ function initAccordion() {
                 panel.style.maxHeight = panel.scrollHeight + 'px';
             }
         });
+    });
+}
+
+// ===== SCROLL TO TOP — RAF-throttled =====
+function initScrollTop() {
+    const btn = document.createElement('button');
+    btn.className = 'btn-scroll-top';
+    btn.setAttribute('aria-label', 'Voltar ao topo');
+    btn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>';
+    document.body.appendChild(btn);
+
+    let ticking = false;
+    window.addEventListener('scroll', () => {
+        if (ticking) return;
+        ticking = true;
+        requestAnimationFrame(() => {
+            btn.classList.toggle('visible', window.scrollY > 500);
+            ticking = false;
+        });
+    }, { passive: true });
+
+    btn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+}
+
+// ===== SEARCH CLEAR BUTTON =====
+function initSearchClear() {
+    const input = document.getElementById('search-texto');
+    if (!input) return;
+
+    const field = input.closest('.field');
+    if (!field) return;
+    field.style.position = 'relative';
+
+    const clearBtn = document.createElement('button');
+    clearBtn.type = 'button';
+    clearBtn.className = 'search-clear-btn';
+    clearBtn.setAttribute('aria-label', 'Limpar busca');
+    clearBtn.innerHTML = '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+    field.appendChild(clearBtn);
+
+    const toggle = () => clearBtn.classList.toggle('visible', input.value.length > 0);
+    input.addEventListener('input', toggle);
+
+    clearBtn.addEventListener('click', () => {
+        input.value = '';
+        clearBtn.classList.remove('visible');
+        currentBusca = '';
+        carregarImoveis();
+        input.focus();
     });
 }
