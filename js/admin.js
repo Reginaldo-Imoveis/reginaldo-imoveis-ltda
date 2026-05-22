@@ -731,11 +731,11 @@ async function renderAnalytics() {
     });
 
     // ── Imóveis por status ────────────────────────────────────
-    const statusImap = { 'Disponível': 0, 'Vendido': 0, 'Reservado': 0 };
+    const statusImap = { 'Disponível': 0, 'Vendido': 0, 'Alugado': 0, 'Reservado': 0 };
     imoveisCache.forEach(i => { const s = i.status || 'Disponível'; if (s in statusImap) statusImap[s]++; });
     mkChart('chart-status', {
         type: 'doughnut',
-        data: { labels: ['Disponível', 'Vendido', 'Reservado'], datasets: [{ data: Object.values(statusImap), backgroundColor: [C.green, C.red, C.gold], borderColor: 'transparent', hoverOffset: 6 }] },
+        data: { labels: ['Disponível', 'Vendido', 'Alugado', 'Reservado'], datasets: [{ data: Object.values(statusImap), backgroundColor: [C.green, C.red, C.blue, C.gold], borderColor: 'transparent', hoverOffset: 6 }] },
         options: { ...baseOptions, cutout: '65%' }
     });
 

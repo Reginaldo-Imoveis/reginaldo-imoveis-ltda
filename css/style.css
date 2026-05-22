@@ -854,7 +854,8 @@ h1, h2, h3, h4, h5, h6 {
   backdrop-filter: blur(12px);
   border: 1px solid rgba(255,255,255,0.12);
 }
-.badge-status.vendido { background: rgba(239, 68, 68, 0.85); }
+.badge-status.vendido  { background: rgba(239, 68, 68, 0.85); }
+.badge-status.alugado  { background: rgba(59, 130, 246, 0.85); }
 .badge-status.reservado { background: rgba(245, 158, 11, 0.85); }
 
 .badge-finalidade {
@@ -2106,9 +2107,10 @@ select.form-control { cursor: pointer; appearance: none; background-image: url("
   letter-spacing: 0.1em;
   text-transform: uppercase;
 }
-.status-pill.disponivel { background: rgba(34, 197, 94, 0.14); color: #4ADE80; }
-.status-pill.vendido { background: rgba(239, 68, 68, 0.14); color: #FF6B6B; }
-.status-pill.reservado { background: rgba(245, 158, 11, 0.14); color: #FBBF24; }
+.status-pill.disponivel { background: rgba(34, 197, 94, 0.14);  color: #4ADE80; }
+.status-pill.vendido    { background: rgba(239, 68, 68, 0.14);  color: #FF6B6B; }
+.status-pill.alugado    { background: rgba(59, 130, 246, 0.14); color: #74b9ff; }
+.status-pill.reservado  { background: rgba(245, 158, 11, 0.14); color: #FBBF24; }
 
 .row-actions { display: flex; gap: 8px; justify-content: flex-end; }
 .btn-action {
@@ -3473,7 +3475,8 @@ select.cap-form-control option { background: #1A1A22; color: #EDEDEF; }
   }
   .badge-tipo { background: rgba(10, 10, 11, 0.90); }
   .badge-status { background: rgba(10, 10, 11, 0.90); }
-  .badge-status.vendido { background: rgba(239, 68, 68, 0.92); }
+  .badge-status.vendido   { background: rgba(239, 68, 68, 0.92); }
+  .badge-status.alugado   { background: rgba(59, 130, 246, 0.92); }
   .badge-status.reservado { background: rgba(245, 158, 11, 0.92); }
   .badge-finalidade.venda { background: rgba(123, 25, 41, 0.92); }
   .badge-finalidade.locacao { background: rgba(34, 197, 94, 0.92); }
