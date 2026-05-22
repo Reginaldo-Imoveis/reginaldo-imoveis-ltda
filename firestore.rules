@@ -1,0 +1,20 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── Imóveis ───────────────────────────────────────────────
+    // Qualquer visitante pode ler; apenas admin autenticado pode gravar
+    match /imoveis/{docId} {
+      allow read:             if true;
+      allow create, update, delete: if request.auth != null;
+    }
+
+    // ── Leads ─────────────────────────────────────────────────
+    // Qualquer visitante pode criar (formulário público);
+    // apenas admin autenticado pode ler e atualizar
+    match /leads/{docId} {
+      allow create: if true;
+      allow read, update, delete: if request.auth != null;
+    }
+  }
+}

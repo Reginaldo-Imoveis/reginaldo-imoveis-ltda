@@ -103,7 +103,10 @@
         </div>
     </footer>
 
-    <script>
+    <script type="module">
+        import { db } from '/js/firebase-config.js';
+        import { doc, getDoc } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
+
         document.addEventListener('DOMContentLoaded', async () => {
             // ── Header scroll + mobile menu ──
             const header = document.getElementById('site-header');
@@ -142,26 +145,23 @@
             // ── Carregar detalhes do imóvel ──
             const params = new URLSearchParams(window.location.search);
             let id = params.get('id');
-            if (!id) {
-                const slugMatch = window.location.pathname.match(/-(\d+)$/);
-                if (slugMatch) id = slugMatch[1];
-            }
             const container = document.getElementById('imovel-detalhes');
 
             if (!id) {
                 container.innerHTML = `
                     <div style="text-align:center; padding: 80px 0;">
                         <h2 class="section-title" style="font-size: 2rem;">Imóvel não especificado</h2>
-                        <p class="section-sub" style="margin-top: 16px;"><a href="/" style="color: var(--c-gold);">Voltar à página inicial</a></p>
+                        <p class="section-sub" style="margin-top: 16px;"><a href="index.html" style="color: var(--c-gold);">Voltar à página inicial</a></p>
                     </div>`;
                 return;
             }
 
             try {
-                const response = await fetch(`/api/imoveis/${id}`);
-                if (!response.ok) throw new Error('Imóvel não encontrado');
+                // Busca no Firestore pelo document ID
+                const snap = await getDoc(doc(db, 'imoveis', id));
+                if (!snap.exists()) throw new Error('Imóvel não encontrado');
 
-                const imovel = await response.json();
+                const imovel = { id: snap.id, ...snap.data() };
                 const preco = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 0 }).format(imovel.preco);
                 const entrada = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 0 }).format(imovel.preco * 0.2);
                 const precoFmt = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 0 }).format(imovel.preco);
@@ -433,8 +433,8 @@
                     const wrap = document.getElementById('galeria-wrap');
                     if (!wrap) return;
 
-                    let galeria = [];
-                    try { const g = JSON.parse(imovel.galeria || '[]'); galeria = Array.isArray(g) ? g : []; } catch(e) {}
+                    // Firestore armazena galeria como array nativo (não JSON string)
+                    const galeria = Array.isArray(imovel.galeria) ? imovel.galeria : [];
                     const allImgs = [imgUrl, ...galeria.filter(u => u !== imgUrl)];
                     let current = 0;
                     let busy = false;

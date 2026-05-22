@@ -1,6 +1,13 @@
 // =========================================================
-// REGINALDO IMÓVEIS — Main Script
+// REGINALDO IMÓVEIS — Main Script v12 (Firebase)
 // =========================================================
+
+import { db } from './firebase-config.js';
+import {
+    collection, getDocs, addDoc, orderBy, query, serverTimestamp
+} from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
+
+const HIGH_TICKET_THRESHOLD = 1500000; // R$1,5M
 
 document.addEventListener('DOMContentLoaded', () => {
     initHeaderScroll();
@@ -192,13 +199,13 @@ function initSearch() {
     });
 }
 
-// CARREGAR IMÓVEIS
+// CARREGAR IMÓVEIS (Firestore)
 const PAGE_SIZE = 6;
 let shownCount = 0;
 
-// AbortController: cancels previous in-flight request when user changes filters quickly
-// Prevents race conditions where a slow response for "Casa" arrives after "Apartamento"
-let _fetchController = null;
+// Cache de todos os imóveis buscados do Firestore (sem filtro)
+let _allImoveisFirestore = null;
+let _firebaseLoading     = false;
 
 async function carregarImoveis() {
     const grid = document.getElementById('grid-imoveis');
@@ -206,16 +213,9 @@ async function carregarImoveis() {
     shownCount = 0;
     atualizarBotaoVerMais(0, 0);
 
-    // Cancel any previous request that hasn't resolved yet
-    if (_fetchController) {
-        _fetchController.abort();
-    }
-    _fetchController = new AbortController();
-
     const buscarBtn = document.getElementById('btn-buscar');
     buscarBtn?.classList.add('loading');
 
-    grid.classList.remove('grid-loading');
     grid.innerHTML = Array.from({ length: 6 }, () => `
         <article class="imovel-card skeleton-card">
             <div class="imovel-img-wrap"></div>
@@ -229,19 +229,34 @@ async function carregarImoveis() {
     `).join('');
 
     try {
-        let url = `/api/imoveis?tipo=${encodeURIComponent(currentTipo)}`;
-        if (currentBusca) url += `&busca=${encodeURIComponent(currentBusca)}`;
-        if (currentFaixa && currentFaixa !== 'todos') {
-            const [min, max] = currentFaixa.split('-').map(Number);
-            if (!isNaN(min)) url += `&preco_min=${min}`;
-            if (!isNaN(max)) url += `&preco_max=${max}`;
+        // Busca todos do Firestore uma vez e faz cache em memória
+        if (!_allImoveisFirestore) {
+            const q        = query(collection(db, 'imoveis'), orderBy('createdAt', 'desc'));
+            const snapshot = await getDocs(q);
+            _allImoveisFirestore = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
         }
 
-        const res = await fetch(url, { signal: _fetchController.signal });
-        const json = await res.json();
-        let imoveis = Array.isArray(json) ? json : (json.data || []);
-        imoveisLoadedCache = imoveis;
+        // Filtragem client-side
+        let imoveis = _allImoveisFirestore;
 
+        if (currentTipo && currentTipo !== 'todos') {
+            imoveis = imoveis.filter(i => (i.tipo || '').toLowerCase() === currentTipo.toLowerCase());
+        }
+        if (currentBusca) {
+            const term = currentBusca.toLowerCase();
+            imoveis = imoveis.filter(i =>
+                (i.titulo    || '').toLowerCase().includes(term) ||
+                (i.descricao || '').toLowerCase().includes(term) ||
+                (i.bairro    || '').toLowerCase().includes(term)
+            );
+        }
+        if (currentFaixa && currentFaixa !== 'todos') {
+            const [min, max] = currentFaixa.split('-').map(Number);
+            if (!isNaN(min)) imoveis = imoveis.filter(i => (i.preco || 0) >= min);
+            if (!isNaN(max)) imoveis = imoveis.filter(i => (i.preco || 0) <= max);
+        }
+
+        imoveisLoadedCache = imoveis;
         buscarBtn?.classList.remove('loading');
         grid.innerHTML = '';
 
@@ -251,39 +266,34 @@ async function carregarImoveis() {
                     <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity:0.4; margin-bottom: 16px;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
                     <h4 style="font-family: var(--font-display); font-size: 1.5rem; color: var(--c-text); margin-bottom: 8px;">Nenhum imóvel encontrado</h4>
                     <p>Tente ajustar os filtros ou fale com um especialista para uma curadoria sob medida.</p>
-                </div>
-            `;
+                </div>`;
             atualizarBotaoVerMais(0, 0);
             return;
         }
 
         const batch = imoveis.slice(0, PAGE_SIZE);
-        shownCount = batch.length;
+        shownCount  = batch.length;
         batch.forEach(imovel => grid.appendChild(criarCard(imovel)));
         atualizarBotoesFavoritos();
         initCarouselDots(grid, shownCount);
         atualizarBotaoVerMais(shownCount, imoveis.length);
-    } catch (err) {
-        // AbortError is intentional — user changed filters before response arrived
-        if (err.name === 'AbortError') return;
 
+    } catch (err) {
         buscarBtn?.classList.remove('loading');
-        const isOffline = err instanceof TypeError && err.message.toLowerCase().includes('fetch');
-        const msg = isOffline
-            ? 'O servidor não está em execução. Inicie com <code style="background:rgba(255,255,255,0.08);padding:2px 6px;border-radius:3px;">npm start</code> e atualize a página.'
-            : 'Verifique sua conexão e tente novamente.';
         grid.innerHTML = `
             <div style="grid-column:1/-1; text-align:center; padding: 60px 20px; color: var(--c-text-mute);">
                 <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#FF8B8B" stroke-width="1.5" style="margin-bottom: 16px;">
                     <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
                 </svg>
                 <h4 style="font-family: var(--font-display); font-size: 1.5rem; color: var(--c-text); margin-bottom: 8px;">Não foi possível carregar os imóveis</h4>
-                <p style="margin-bottom: 20px;">${msg}</p>
-                <button onclick="carregarImoveis()" style="background: var(--c-gold); color: #000; border: none; padding: 12px 28px; border-radius: 4px; cursor: pointer; font-weight: 600;">Tentar novamente</button>
-            </div>
-        `;
+                <p style="margin-bottom: 20px;">Verifique sua conexão e tente novamente.</p>
+                <button onclick="window.carregarImoveis()" style="background: var(--c-gold); color: #000; border: none; padding: 12px 28px; border-radius: 4px; cursor: pointer; font-weight: 600;">Tentar novamente</button>
+            </div>`;
     }
 }
+
+// Expor para o onclick do HTML
+window.carregarImoveis = carregarImoveis;
 
 function atualizarBotaoVerMais(shown, total) {
     const btn = document.getElementById('btn-ver-mais');
@@ -317,8 +327,8 @@ function criarCard(imovel) {
     const preco = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 0 }).format(imovel.preco);
     const finalidade = imovel.finalidade || 'Venda';
     const precoLabel = finalidade === 'Locação' ? 'Aluguel' : 'A partir de';
-    const slug = imovel.slug || slugify(imovel.titulo);
-    const detalhesUrl = `/imovel/${slug}-${imovel.id}`;
+    // GitHub Pages (estático): usa query param em vez de rota no servidor
+    const detalhesUrl = `detalhes.html?id=${imovel.id}`;
 
     let statusClass = '';
     if (imovel.status === 'Vendido') statusClass = 'vendido';
@@ -384,6 +394,9 @@ function criarCard(imovel) {
 
     return card;
 }
+
+// Expor para o onclick do HTML
+window.carregarMais = carregarMais;
 
 // ===== FAVORITOS (com cache offline) =====
 function getFavoritos() {
@@ -455,6 +468,9 @@ function toggleFavorito(event, id) {
     localStorage.setItem('reginaldo_favoritos', JSON.stringify(favs));
 }
 
+// Expor para o onclick gerado dinamicamente nos cards
+window.toggleFavorito = toggleFavorito;
+
 function atualizarBotoesFavoritos() {
     const favs = getFavoritos();
     document.querySelectorAll('.btn-favoritar, .btn-fav').forEach(btn => {
@@ -466,12 +482,10 @@ function atualizarBotoesFavoritos() {
     });
 }
 
-// ===== CAPTAÇÃO INLINE =====
+// ===== CAPTAÇÃO INLINE (Firestore) =====
 function initCaptacaoInline() {
     const form = document.getElementById('captacao-form-inline');
     if (!form) return;
-
-    const API_URL = '/api/leads';
 
     const rangeInput = document.getElementById('cap-preco');
     const precoDisplay = document.getElementById('cap-preco-display');
@@ -571,23 +585,29 @@ function initCaptacaoInline() {
 
         setLoading(true);
 
+        // Honeypot: se o campo oculto foi preenchido, é bot
+        if (document.getElementById('cap-website')?.value) {
+            setLoading(false);
+            showSuccess(); // silencioso para bots
+            return;
+        }
+
         try {
-            const res = await fetch(API_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    nome, telefone,
-                    tipo_imovel: tipo,
-                    quartos, vagas,
-                    faixa_preco: faixaPreco,
-                    website: document.getElementById('cap-website')?.value || '',
-                    origem: window.location.pathname,
-                    utm_source: window.riTracker?.utm?.source || '',
-                    session_id: window.riTracker?.sessionId || ''
-                })
+            const faixaNum = parseFloat(faixaPreco) || 0;
+            await addDoc(collection(db, 'leads'), {
+                nome,
+                telefone,
+                tipo_imovel:  tipo,
+                quartos,
+                vagas,
+                faixa_preco:  faixaNum,
+                classificacao: faixaNum >= HIGH_TICKET_THRESHOLD ? 'High Ticket' : 'Normal',
+                status:       'novo',
+                origem:       window.location.pathname,
+                utm_source:   window.riTracker?.utm?.source || '',
+                session_id:   window.riTracker?.sessionId  || '',
+                criado_em:    serverTimestamp()
             });
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.error);
             setLoading(false);
             showSuccess();
         } catch (err) {
