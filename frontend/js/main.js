@@ -141,12 +141,14 @@ function initReveal() {
 }
 
 // FILTROS por chip
-let currentTipo = 'todos';
-let currentBusca = '';
-let currentFaixa = 'todos';
+let currentTipo       = 'todos';
+let currentFinalidade = 'todos';
+let currentBusca      = '';
+let currentFaixa      = 'todos';
 let imoveisLoadedCache = [];
 
 function initFilterChips() {
+    // Chips de tipo
     const chips = document.querySelectorAll('#filter-chips .chip');
     chips.forEach(c => {
         c.addEventListener('click', () => {
@@ -156,6 +158,17 @@ function initFilterChips() {
             // Sincronizar com select do hero
             const sel = document.getElementById('search-tipo');
             if (sel) sel.value = currentTipo;
+            carregarImoveis();
+        });
+    });
+
+    // Chips de finalidade (Venda / Aluguel)
+    const chipsF = document.querySelectorAll('#filter-chips-finalidade .chip-finalidade');
+    chipsF.forEach(c => {
+        c.addEventListener('click', () => {
+            chipsF.forEach(x => x.classList.remove('active'));
+            c.classList.add('active');
+            currentFinalidade = c.dataset.finalidade;
             carregarImoveis();
         });
     });
@@ -241,6 +254,10 @@ async function carregarImoveis() {
 
         if (currentTipo && currentTipo !== 'todos') {
             imoveis = imoveis.filter(i => (i.tipo || '').toLowerCase() === currentTipo.toLowerCase());
+        }
+        if (currentFinalidade && currentFinalidade !== 'todos') {
+            // 'Locação' no Firestore equivale a 'Aluguel' no filtro
+            imoveis = imoveis.filter(i => (i.finalidade || 'Venda') === currentFinalidade);
         }
         if (currentBusca) {
             const term = currentBusca.toLowerCase();
