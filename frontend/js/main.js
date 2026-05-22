@@ -348,7 +348,8 @@ function criarCard(imovel) {
     const detalhesUrl = `detalhes.html?id=${imovel.id}`;
 
     let statusClass = '';
-    if (imovel.status === 'Vendido') statusClass = 'vendido';
+    if (imovel.status === 'Vendido')   statusClass = 'vendido';
+    if (imovel.status === 'Alugado')   statusClass = 'alugado';
     if (imovel.status === 'Reservado') statusClass = 'reservado';
     const statusHtml = imovel.status && imovel.status !== 'Disponível'
         ? `<span class="badge-status ${statusClass}">${imovel.status}</span>` : '';

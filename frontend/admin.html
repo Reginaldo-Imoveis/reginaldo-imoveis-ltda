@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%23B8860B'/><text y='23' x='16' text-anchor='middle' font-size='20' fill='white' font-family='Georgia,serif' font-weight='bold'>R</text></svg>">
-    <link rel="stylesheet" href="css/style.css?v=12">
+    <link rel="stylesheet" href="css/style.css?v=13">
 </head>
 <body class="admin-body">
 
@@ -384,8 +384,8 @@
                         <div class="form-group">
                             <label class="form-label">Finalidade</label>
                             <select id="finalidade" class="form-control" required>
-                                <option value="Venda">Venda</option>
-                                <option value="Locação">Locação</option>
+                                <option value="Venda">🏷 Venda</option>
+                                <option value="Locação">🔑 Aluguel (Locação)</option>
                             </select>
                         </div>
                         <div class="form-group">
@@ -393,6 +393,7 @@
                             <select id="status" class="form-control" required>
                                 <option value="Disponível">Disponível</option>
                                 <option value="Vendido">Vendido</option>
+                                <option value="Alugado">Alugado</option>
                                 <option value="Reservado">Reservado</option>
                             </select>
                         </div>
@@ -482,6 +483,6 @@
     <div id="toast" class="toast"></div>
 
     <script src="js/chart.umd.min.js"></script>
-    <script type="module" src="js/admin.js?v=11"></script>
+    <script type="module" src="js/admin.js?v=12"></script>
 </body>
 </html>
