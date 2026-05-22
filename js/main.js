@@ -360,7 +360,8 @@ function criarCard(imovel) {
     const statusHtml = imovel.status && imovel.status !== 'Disponível'
         ? `<span class="badge-status ${statusClass}">${imovel.status}</span>` : '';
 
-    const hash = (imovel.id * 2654435761) >>> 0;
+    // Hash estável a partir do ID (string Firestore): converte char codes em número
+    const hash = Array.from(String(imovel.id)).reduce((h, c) => (Math.imul(h ^ c.charCodeAt(0), 2654435761)) >>> 0, 0);
     const showProof = imovel.status === 'Disponível' || !imovel.status;
     const proofTag = showProof && (hash % 3 === 0)
         ? `<span class="badge-proof">${SOCIAL_PROOF_TAGS[hash % SOCIAL_PROOF_TAGS.length]}</span>` : '';
@@ -377,7 +378,7 @@ function criarCard(imovel) {
             <span class="badge-finalidade ${isHibrido ? 'hibrido' : finalidade === 'Locação' ? 'locacao' : 'venda'}">${isHibrido ? 'Venda + Locação' : finalidade}</span>
             ${statusHtml}
             ${proofTag}
-            <button class="btn-fav" title="Adicionar aos favoritos" aria-label="Adicionar aos favoritos" onclick="toggleFavorito(event, ${imovel.id})">
+            <button class="btn-fav" title="Adicionar aos favoritos" aria-label="Adicionar aos favoritos" onclick="toggleFavorito(event, '${imovel.id}')">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
             </button>
             <a href="${detalhesUrl}" style="display:block; width:100%; height:100%;">
@@ -500,10 +501,10 @@ window.toggleFavorito = toggleFavorito;
 function atualizarBotoesFavoritos() {
     const favs = getFavoritos();
     document.querySelectorAll('.btn-favoritar, .btn-fav').forEach(btn => {
-        const m = (btn.getAttribute('onclick') || '').match(/toggleFavorito\(event,\s*(\d+)\)/);
+        // ID pode ser string Firestore — captura qualquer coisa dentro das aspas simples
+        const m = (btn.getAttribute('onclick') || '').match(/toggleFavorito\(event,\s*'([^']+)'\)/);
         if (m && m[1]) {
-            const id = parseInt(m[1], 10);
-            btn.classList.toggle('active', favs.includes(id));
+            btn.classList.toggle('active', favs.includes(m[1]));
         }
     });
 }
