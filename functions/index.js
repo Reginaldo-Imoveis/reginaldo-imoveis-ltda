@@ -39,8 +39,9 @@ function formatBRL(value) {
 }
 
 // =============================================================
-// HTTP Function: imovel
+// HTTP Function: imovel (Gen 1 — URL previsível)
 // Região: southamerica-east1 (São Paulo) — baixa latência no BR
+// URL: https://southamerica-east1-reginaldo-imoveis.cloudfunctions.net/imovel
 // =============================================================
 exports.imovel = functions
     .region('southamerica-east1')
