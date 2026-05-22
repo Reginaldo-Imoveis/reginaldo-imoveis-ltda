@@ -3369,7 +3369,9 @@ select.cap-form-control option { background: #1A1A22; color: #EDEDEF; }
   .hero { padding: 110px 0 70px; min-height: 85vh; }
   .hero h1 { font-size: clamp(2rem, 5.2vw, 3.2rem); }
   .hero-sub { font-size: clamp(0.9rem, 1.3vw, 1.1rem); margin-bottom: 28px; }
-  .hero-content { padding: 0 20px; overflow: hidden; }
+  /* overflow:clip clips sem criar scroll container — evita que animações do hero
+     causem scroll horizontal, mas sem cortar o ring de focus dos elementos filhos */
+  .hero-content { padding: 0 20px; overflow: clip; }
   /* CTA buttons em coluna no mobile — mais fáceis de tocar */
   .hero-ctas {
     flex-direction: column;
@@ -3512,6 +3514,32 @@ select.cap-form-control option { background: #1A1A22; color: #EDEDEF; }
   /* Scroll to top — posição mobile */
   .btn-scroll-top { bottom: 80px; right: 16px; width: 42px; height: 42px; }
 
+  /* ── Página detalhes ── */
+  /* padding-top respeita altura do header fixo (≈72px) + folga */
+  .detalhes-wrap { padding-top: 100px; padding-bottom: 40px; }
+
+  /* ── Página contato ── */
+  /* Card lateral deixa de ser sticky para não empurrar conteúdo em tela pequena */
+  .card-contato { position: static; top: auto; }
+  .contato-info,
+  .contato-form-card { padding: 28px 20px; }
+  /* Remove margem negativa que sobrepunha seções no mobile */
+  .contato-wrapper { margin-top: 16px; }
+
+  /* ── Accordion ── */
+  /* Recuo reduzido: 72px desktop → 44px mobile */
+  .accordion-panel { padding-left: 44px; }
+
+  /* ── Galeria de fotos (detalhes) ── */
+  /* Botões menores para não bloquear visualização das fotos */
+  .galeria-nav { width: 40px; height: 40px; }
+
+  /* ── Lightbox ── */
+  /* Botões de navegação menores e mais próximos das bordas */
+  .lightbox-nav { width: 44px; height: 44px; }
+  .lightbox-nav.prev { left: 12px; }
+  .lightbox-nav.next { right: 12px; }
+
   .footer-grid { grid-template-columns: 1fr; gap: 36px; }
   .footer-bottom { flex-direction: column; text-align: center; }
 
@@ -3522,6 +3550,42 @@ select.cap-form-control option { background: #1A1A22; color: #EDEDEF; }
   .tabela-imoveis { display: block; overflow-x: auto; }
   .form-row, .admin-grid { grid-template-columns: 1fr; }
   .admin-topbar { flex-direction: column; align-items: stretch; gap: 16px; }
+}
+
+/* ============================================================
+   BREAKPOINT EXTRA-PEQUENO — Celulares abaixo de 480px
+   Corrige problemas específicos de telas < 360px que o bloco
+   de 768px não consegue cobrir adequadamente.
+   ============================================================ */
+@media (max-width: 480px) {
+  /* Hero stats: permite quebra em 2 colunas nos celulares menores
+     evitando que os números fiquem cortados com flex-wrap:nowrap */
+  .hero-stats {
+    flex-wrap: wrap;
+    gap: 16px 0;
+  }
+  .hero-stat-divider { display: none; }
+  .hero-stat {
+    flex: 0 0 50%;
+    text-align: center;
+  }
+
+  /* Detalhes — reduz padding-top para header menor em telas XS */
+  .detalhes-wrap { padding-top: 90px; }
+
+  /* Seções — compressão vertical em telas muito pequenas */
+  .section { padding: 50px 0; }
+  .section-tight { padding: 40px 0; }
+
+  /* CTA banner */
+  .cta-banner { padding: 40px 16px; }
+  .cta-banner h2 { font-size: clamp(1.4rem, 5vw, 1.8rem); }
+
+  /* Cards de imóvel — largura quase total em XS */
+  .grid-imoveis .imovel-card { min-width: 92vw; max-width: 92vw; }
+
+  /* Lightbox — ícones de fechar e navegar maiores para toque */
+  .lightbox-close { width: 40px; height: 40px; top: 12px; right: 12px; }
 }
 
 /* ============================================================
