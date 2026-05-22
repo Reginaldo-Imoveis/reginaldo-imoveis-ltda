@@ -256,8 +256,13 @@ async function carregarImoveis() {
             imoveis = imoveis.filter(i => (i.tipo || '').toLowerCase() === currentTipo.toLowerCase());
         }
         if (currentFinalidade && currentFinalidade !== 'todos') {
-            // 'Locação' no Firestore equivale a 'Aluguel' no filtro
-            imoveis = imoveis.filter(i => (i.finalidade || 'Venda') === currentFinalidade);
+            // Imóveis híbridos ("Venda e Locação") aparecem nos dois filtros
+            imoveis = imoveis.filter(i => {
+                const f = i.finalidade || 'Venda';
+                if (currentFinalidade === 'Venda')   return f === 'Venda'   || f === 'Venda e Locação';
+                if (currentFinalidade === 'Locação') return f === 'Locação' || f === 'Venda e Locação';
+                return f === currentFinalidade;
+            });
         }
         if (currentBusca) {
             const term = currentBusca.toLowerCase();
@@ -343,7 +348,8 @@ function slugify(str) {
 function criarCard(imovel) {
     const preco = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 0 }).format(imovel.preco);
     const finalidade = imovel.finalidade || 'Venda';
-    const precoLabel = finalidade === 'Locação' ? 'Aluguel' : 'A partir de';
+    const isHibrido  = finalidade === 'Venda e Locação';
+    const precoLabel = finalidade === 'Locação' ? 'Aluguel' : isHibrido ? 'Venda / Locação' : 'A partir de';
     // GitHub Pages (estático): usa query param em vez de rota no servidor
     const detalhesUrl = `detalhes.html?id=${imovel.id}`;
 
@@ -368,7 +374,7 @@ function criarCard(imovel) {
     card.innerHTML = `
         <div class="imovel-img-wrap">
             <span class="badge-tipo">${imovel.tipo}</span>
-            <span class="badge-finalidade ${finalidade === 'Locação' ? 'locacao' : 'venda'}">${finalidade}</span>
+            <span class="badge-finalidade ${isHibrido ? 'hibrido' : finalidade === 'Locação' ? 'locacao' : 'venda'}">${isHibrido ? 'Venda + Locação' : finalidade}</span>
             ${statusHtml}
             ${proofTag}
             <button class="btn-fav" title="Adicionar aos favoritos" aria-label="Adicionar aos favoritos" onclick="toggleFavorito(event, ${imovel.id})">
