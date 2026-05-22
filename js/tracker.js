@@ -71,14 +71,9 @@
         const batch = queue.splice(0, 50);
         persistQueue();
 
-        fetch('/api/tracking', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ events: batch })
-        }).catch(() => {
-            queue.unshift(...batch);
-            persistQueue();
-        });
+        // Backend removido — eventos ficam em localStorage para análise futura
+        queue.unshift(...batch);
+        persistQueue();
     }
 
     // === TRACKING EVENTS ===
