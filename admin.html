@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel Admin · Reginaldo Imóveis</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%23B8860B'/><text y='23' x='16' text-anchor='middle' font-size='20' fill='white' font-family='Georgia,serif' font-weight='bold'>R</text></svg>">
+    <link rel="stylesheet" href="/css/style.css?v=11">
+</head>
+<body class="admin-body">
+
+    <!-- ======================= LOGIN ======================= -->
+    <div class="admin-login-wrap" id="login-screen">
+        <div class="admin-login-card">
+            <div class="lock-icon">
+                <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                    <rect x="3" y="11" width="18" height="11" rx="2"/>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                </svg>
+            </div>
+            <h2>Acesso <em style="font-style: italic; font-family: var(--font-serif); color: var(--c-gold);">Restrito</em></h2>
+            <p class="sub">Painel de administração · Reginaldo Imóveis</p>
+
+            <form id="login-form">
+                <div class="form-group">
+                    <label class="form-label">E-mail</label>
+                    <input type="email" id="admin-email" class="form-control" required placeholder="admin@reginaldoimoveis.com.br" autocomplete="username">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Senha</label>
+                    <input type="password" id="admin-password" class="form-control" required placeholder="••••••••••" autocomplete="current-password">
+                </div>
+                <button type="submit" class="btn btn-primary btn-block btn-lg">
+                    Entrar no painel
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                </button>
+                <div id="login-error" class="login-err">Credenciais inválidas. Tente novamente.</div>
+            </form>
+            <a href="/" class="admin-back">← Voltar para o site</a>
+        </div>
+    </div>
+
+    <!-- ======================= PAINEL ======================= -->
+    <div id="admin-panel" style="display: none;">
+        <div class="admin-shell">
+
+            <!-- SIDEBAR -->
+            <aside class="admin-sidebar">
+                <a href="/" class="logo">
+                    Reginaldo<span class="dot"></span><span>Admin</span>
+                </a>
+                <nav class="admin-menu">
+                    <a href="#" class="active" data-view="imoveis">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+                        Imóveis
+                    </a>
+                    <a href="#" data-view="novo" id="link-novo">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+                        Novo imóvel
+                    </a>
+                    <a href="#" data-view="leads" id="link-leads">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                        Leads
+                    </a>
+                    <a href="#" data-view="analytics" id="link-analytics">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+                        Analytics
+                    </a>
+                    <a href="#" data-view="seguranca" id="link-seguranca">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                        Segurança
+                    </a>
+                    <a href="/" target="_blank">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                        Ver site público
+                    </a>
+                </nav>
+                <div class="admin-sidebar-footer">
+                    <button id="btn-logout" class="btn btn-ghost btn-block btn-sm">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                        Sair do painel
+                    </button>
+                </div>
+            </aside>
+
+            <!-- MAIN -->
+            <main class="admin-main">
+                <div class="admin-topbar">
+                    <div>
+                        <h1>Gerenciar <em style="font-style: italic; font-family: var(--font-serif); color: var(--c-gold);">imóveis</em></h1>
+                        <span class="topbar-sub">Visualize, edite e cadastre os imóveis disponíveis no site.</span>
+                    </div>
+                    <div class="topbar-actions">
+                        <button id="btn-novo" class="btn btn-primary">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                            Novo imóvel
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Stats -->
+                <div class="admin-stats" id="admin-stats">
+                    <div class="stat-card">
+                        <div class="label">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+                            Total cadastrados
+                        </div>
+                        <div class="val" id="stat-total">—</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="label">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                            Disponíveis
+                        </div>
+                        <div class="val" id="stat-disponivel">—</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="label">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                            Vendidos
+                        </div>
+                        <div class="val" id="stat-vendido">—</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="label">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                            Valor em vitrine
+                        </div>
+                        <div class="val" id="stat-valor">—</div>
+                    </div>
+                </div>
+
+                <!-- Lista -->
+                <div class="admin-card">
+                    <div class="admin-card-head">
+                        <h3>
+                            Imóveis cadastrados
+                            <span class="count" id="count-imoveis">0</span>
+                        </h3>
+                        <div class="admin-card-actions">
+                            <div class="admin-search">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                                <input type="text" id="admin-search-input" placeholder="Buscar por título, tipo…">
+                            </div>
+                            <select id="admin-filter-status" class="form-control" style="width:auto; padding:10px 14px; font-size:.86rem;">
+                                <option value="todos">Todos os status</option>
+                                <option value="Disponível">Disponíveis</option>
+                                <option value="Vendido">Vendidos</option>
+                                <option value="Reservado">Reservados</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div id="lista-imoveis-wrap">
+                        <table class="tabela-imoveis">
+                            <thead>
+                                <tr>
+                                    <th style="width: 100px;"></th>
+                                    <th>Imóvel</th>
+                                    <th>Status</th>
+                                    <th>Características</th>
+                                    <th>Preço</th>
+                                    <th style="text-align:right;">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbody-imoveis">
+                                <tr><td colspan="6" style="text-align:center; color:var(--c-text-mute); padding: 40px;">Carregando imóveis…</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <!-- ===== LEADS VIEW ===== -->
+                <div id="view-leads" style="display:none;">
+                    <div class="admin-topbar">
+                        <div>
+                            <h1>Gerenciar <em style="font-style: italic; font-family: var(--font-serif); color: var(--c-gold);">leads</em></h1>
+                            <span class="topbar-sub">Acompanhe os leads captados pelo formulário do site.</span>
+                        </div>
+                    </div>
+
+                    <div class="admin-stats" id="leads-stats">
+                        <div class="stat-card">
+                            <div class="label">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+                                Total de leads
+                            </div>
+                            <div class="val" id="stat-leads-total">—</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="label">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                                Novos
+                            </div>
+                            <div class="val" id="stat-leads-novos">—</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="label">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                                High Ticket
+                            </div>
+                            <div class="val" id="stat-leads-ht">—</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="label">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                                Convertidos
+                            </div>
+                            <div class="val" id="stat-leads-conv">—</div>
+                        </div>
+                    </div>
+
+                    <div class="admin-card">
+                        <div class="admin-card-head">
+                            <h3>
+                                Leads captados
+                                <span class="count" id="count-leads">0</span>
+                            </h3>
+                            <div class="admin-card-actions">
+                                <select id="leads-filter-status" class="form-control" style="width:auto; padding:10px 14px; font-size:.86rem;">
+                                    <option value="todos">Todos os status</option>
+                                    <option value="novo">Novos</option>
+                                    <option value="em atendimento">Em atendimento</option>
+                                    <option value="convertido">Convertidos</option>
+                                    <option value="descartado">Descartados</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div id="lista-leads-wrap">
+                            <table class="tabela-imoveis">
+                                <thead>
+                                    <tr>
+                                        <th>Cliente</th>
+                                        <th>Telefone</th>
+                                        <th>Interesse</th>
+                                        <th>Faixa</th>
+                                        <th>Tipo</th>
+                                        <th>Status</th>
+                                        <th>Data</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tbody-leads">
+                                    <tr><td colspan="7" style="text-align:center; color:var(--c-text-mute); padding: 40px;">Carregando leads…</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ======================= ANALYTICS ======================= -->
+                <div id="view-analytics" style="display:none;">
+                    <div class="admin-topbar">
+                        <div>
+                            <h1>Analytics <em style="font-style:italic; font-family:var(--font-serif); color:var(--c-gold);">do portfólio</em></h1>
+                            <span class="topbar-sub">Visão geral do seu estoque e pipeline de leads.</span>
+                        </div>
+                        <div class="topbar-actions">
+                            <select id="analytics-periodo" class="form-control" style="width:auto; padding:10px 14px; font-size:.86rem;">
+                                <option value="30">Últimos 30 dias</option>
+                                <option value="60">Últimos 60 dias</option>
+                                <option value="90">Últimos 90 dias</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="admin-stats" id="analytics-kpis">
+                        <div class="stat-card"><div class="label">Total de imóveis</div><div class="val" id="akpi-total">—</div></div>
+                        <div class="stat-card"><div class="label">Valor total em vitrine</div><div class="val" id="akpi-valor">—</div></div>
+                        <div class="stat-card"><div class="label">Total de leads</div><div class="val" id="akpi-leads">—</div></div>
+                        <div class="stat-card"><div class="label">Taxa de conversão</div><div class="val" id="akpi-conv">—</div></div>
+                    </div>
+
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:24px; margin-bottom:24px;">
+                        <div class="admin-card">
+                            <div class="admin-card-head"><h3>Imóveis por tipo</h3></div>
+                            <div style="padding:24px; position:relative; height:280px; display:flex; align-items:center; justify-content:center;">
+                                <canvas id="chart-tipo"></canvas>
+                            </div>
+                        </div>
+                        <div class="admin-card">
+                            <div class="admin-card-head"><h3>Imóveis por status</h3></div>
+                            <div style="padding:24px; position:relative; height:280px; display:flex; align-items:center; justify-content:center;">
+                                <canvas id="chart-status"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="display:grid; grid-template-columns:1.5fr 1fr; gap:24px; margin-bottom:24px;">
+                        <div class="admin-card">
+                            <div class="admin-card-head"><h3>Pipeline de leads</h3></div>
+                            <div style="padding:24px; position:relative; height:260px;">
+                                <canvas id="chart-leads-status"></canvas>
+                            </div>
+                        </div>
+                        <div class="admin-card">
+                            <div class="admin-card-head"><h3>Leads high ticket</h3></div>
+                            <div style="padding:24px; position:relative; height:260px; display:flex; align-items:center; justify-content:center;">
+                                <canvas id="chart-leads-ht"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="admin-card">
+                        <div class="admin-card-head"><h3>Imóveis mais visualizados</h3></div>
+                        <div style="padding:24px; position:relative; height:260px;">
+                            <canvas id="chart-top-views"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ======================= SEGURANÇA / 2FA ======================= -->
+                <div id="view-seguranca" style="display:none;">
+                    <div class="admin-topbar">
+                        <div>
+                            <h1>Segurança <em style="font-style:italic; font-family:var(--font-serif); color:var(--c-gold);">2FA</em></h1>
+                            <span class="topbar-sub">Ative a autenticação em dois fatores para proteger seu painel.</span>
+                        </div>
+                    </div>
+
+                    <div class="admin-card" style="max-width: 560px;">
+                        <div id="2fa-status-area">
+                            <p id="2fa-status-text" style="color:var(--c-text-mute); margin-bottom: 20px;">Verificando status…</p>
+                        </div>
+
+                        <div id="2fa-setup-area" style="display:none;">
+                            <p style="color:var(--c-text-soft); margin-bottom: 16px;">Escaneie o QR Code no seu app autenticador (Google Authenticator, Authy, etc):</p>
+                            <div style="text-align:center; margin-bottom: 20px;">
+                                <img id="2fa-qr-img" alt="QR Code 2FA" style="border-radius: 12px; max-width: 200px;">
+                            </div>
+                            <p style="font-size: 0.85rem; color:var(--c-text-mute); margin-bottom: 12px;">Ou insira manualmente: <code id="2fa-secret-code" style="color:var(--c-gold); user-select:all;"></code></p>
+                            <div class="form-group">
+                                <label class="form-label">Código de verificação</label>
+                                <input type="text" id="2fa-confirm-code" class="form-control" placeholder="000000" maxlength="6" inputmode="numeric" style="text-align:center; letter-spacing:8px; font-size:1.3rem; max-width: 200px;">
+                            </div>
+                            <button id="btn-2fa-confirm" class="btn btn-primary">Ativar 2FA</button>
+                            <span id="2fa-setup-msg" style="margin-left: 12px; font-size: 0.9rem;"></span>
+                        </div>
+
+                        <div id="2fa-disable-area" style="display:none;">
+                            <p style="color:var(--c-text-soft); margin-bottom: 16px;">A autenticação em dois fatores está <strong style="color: #4ecdc4;">ativa</strong>. Para desativar, insira o código atual:</p>
+                            <div class="form-group">
+                                <label class="form-label">Código atual</label>
+                                <input type="text" id="2fa-disable-code" class="form-control" placeholder="000000" maxlength="6" inputmode="numeric" style="text-align:center; letter-spacing:8px; font-size:1.3rem; max-width: 200px;">
+                            </div>
+                            <button id="btn-2fa-disable" class="btn btn-dark">Desativar 2FA</button>
+                            <span id="2fa-disable-msg" style="margin-left: 12px; font-size: 0.9rem;"></span>
+                        </div>
+                    </div>
+                </div>
+
+            </main>
+        </div>
+    </div>
+
+    <!-- ======================= MODAL ======================= -->
+    <div class="modal-overlay" id="modal-imovel">
+        <div class="modal">
+            <div class="modal-head">
+                <h3 id="modal-title">Novo <em>imóvel</em></h3>
+                <button class="modal-close" id="btn-modal-close" aria-label="Fechar">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+            </div>
+            <form id="imovel-form" enctype="multipart/form-data">
+                <div class="modal-body">
+                    <input type="hidden" id="imovel-id" value="">
+
+                    <div class="admin-grid">
+                        <div class="form-group full">
+                            <label class="form-label">Título do imóvel</label>
+                            <input type="text" id="titulo" class="form-control" required placeholder="Ex: Lindo Apartamento Tatuapé">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Tipo</label>
+                            <select id="tipo" class="form-control" required>
+                                <option value="Apartamento">Apartamento</option>
+                                <option value="Casa">Casa</option>
+                                <option value="Sobrado">Sobrado</option>
+                                <option value="Comercial">Comercial</option>
+                                <option value="Cobertura">Cobertura</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Finalidade</label>
+                            <select id="finalidade" class="form-control" required>
+                                <option value="Venda">Venda</option>
+                                <option value="Locação">Locação</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Status</label>
+                            <select id="status" class="form-control" required>
+                                <option value="Disponível">Disponível</option>
+                                <option value="Vendido">Vendido</option>
+                                <option value="Reservado">Reservado</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Preço (R$)</label>
+                            <input type="number" id="preco" class="form-control" required placeholder="850000" step="0.01">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Área útil (m²)</label>
+                            <input type="number" id="areaUtil" class="form-control" value="0" min="0" step="0.1">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Quartos</label>
+                            <input type="number" id="quartos" class="form-control" value="0" min="0">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Suítes</label>
+                            <input type="number" id="suites" class="form-control" value="0" min="0">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Vagas</label>
+                            <input type="number" id="vagas" class="form-control" value="0" min="0">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Área total (m²)</label>
+                            <input type="number" id="areaTotal" class="form-control" value="0" min="0" step="0.1">
+                        </div>
+                        <div class="form-group full">
+                            <label class="form-label">Bairro / Região</label>
+                            <input type="text" id="bairro" class="form-control" placeholder="Ex: Mooca, Vila Mariana, Jardim Avelino…">
+                            <small style="color: var(--c-text-mute);">Exibido nos cards e na página do imóvel · Opcional</small>
+                        </div>
+                        <div class="form-group full">
+                            <label class="form-label">Imagem de destaque</label>
+                            <input type="file" id="imagem" class="form-control" accept="image/*">
+                            <small style="color: var(--c-text-mute);">Formatos: JPG, PNG · Recomendado 1200×800px</small>
+                            <img id="preview-imagem" class="upload-preview" alt="">
+                        </div>
+                        <div class="form-group full">
+                            <label class="form-label">Galeria de fotos</label>
+                            <input type="file" id="galeria" class="form-control" accept="image/*" multiple>
+                            <small style="color: var(--c-text-mute);">Selecione múltiplas fotos · Máx. 20 imagens</small>
+                            <div id="preview-galeria" class="galeria-preview"></div>
+                        </div>
+                        <div class="form-group full">
+                            <label class="form-label">Endereço (Google Maps)</label>
+                            <input type="url" id="mapa_url" class="form-control" placeholder="https://maps.google.com/...">
+                            <small style="color: var(--c-text-mute);">Cole o link do Google Maps · Opcional</small>
+                        </div>
+                        <div class="form-group full">
+                            <label class="form-label">Descrição completa</label>
+                            <textarea id="descricao" class="form-control" rows="5" required placeholder="Descreva diferenciais, localização, acabamentos…"></textarea>
+                        </div>
+                    </div>
+
+                    <div id="form-msg" class="form-msg"></div>
+                </div>
+                <div class="modal-foot">
+                    <button type="button" class="btn btn-ghost" id="btn-cancel">Cancelar</button>
+                    <button type="submit" id="btn-salvar" class="btn btn-primary">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                        Salvar imóvel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ======================= MODAL CONFIRMAR EXCLUSÃO ======================= -->
+    <div class="modal-overlay" id="modal-confirm">
+        <div class="modal" style="max-width: 460px;">
+            <div class="modal-body" style="padding: 40px 32px; text-align: center;">
+                <div style="width:64px; height:64px; border-radius:50%; background: rgba(239,68,68,0.12); color:#FF6B6B; display:flex; align-items:center; justify-content:center; margin: 0 auto 22px;">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+                </div>
+                <h3 style="font-size: 1.5rem; margin-bottom: 10px;">Excluir este imóvel?</h3>
+                <p style="color: var(--c-text-soft); margin-bottom: 28px;">Esta ação é definitiva e não pode ser desfeita.</p>
+                <div style="display:flex; gap:12px; justify-content:center;">
+                    <button type="button" class="btn btn-ghost" id="btn-confirm-cancel">Cancelar</button>
+                    <button type="button" class="btn" id="btn-confirm-del" style="background:#EF4444; color:white;">Sim, excluir</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div id="toast" class="toast"></div>
+
+    <script src="/js/chart.umd.min.js"></script>
+    <script type="module" src="/js/admin.js?v=10"></script>
+</body>
+</html>
