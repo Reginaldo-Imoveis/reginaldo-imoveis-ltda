@@ -1,11 +1,13 @@
-name: Deploy GitHub Pages
+name: Deploy
 
 on:
   push:
     branches: [main]
 
 jobs:
-  deploy:
+  # ── 1. GitHub Pages (site estático) ────────────────────────
+  deploy-pages:
+    name: GitHub Pages
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -17,3 +19,29 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./frontend
+
+  # ── 2. Firebase Cloud Functions (OG proxy WhatsApp) ────────
+  deploy-functions:
+    name: Firebase Functions
+    runs-on: ubuntu-latest
+    # Só executa se o secret FIREBASE_TOKEN existir
+    # (permite o site funcionar mesmo sem as functions configuradas)
+    if: ${{ secrets.FIREBASE_TOKEN != '' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: functions/package.json
+
+      - name: Instalar dependências das functions
+        run: npm ci
+        working-directory: functions
+
+      - name: Deploy Firebase Functions
+        run: npx firebase-tools deploy --only functions --non-interactive
+        env:
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
