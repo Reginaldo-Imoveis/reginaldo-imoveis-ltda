@@ -341,7 +341,9 @@ function criarCard(imovel) {
     const proofTag = showProof && (hash % 3 === 0)
         ? `<span class="badge-proof">${SOCIAL_PROOF_TAGS[hash % SOCIAL_PROOF_TAGS.length]}</span>` : '';
 
-    const imgUrl = imovel.imagem || 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=800&auto=format';
+    const imgUrl = imovel.imagem
+        || (Array.isArray(imovel.galeria) && imovel.galeria[0])
+        || 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=800&auto=format';
 
     const card = document.createElement('article');
     card.className = 'imovel-card card-enter';
