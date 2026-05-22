@@ -474,6 +474,11 @@ function initForm() {
                 galeriaUrls = [...galeriaUrls, ...novas];
             }
 
+            // ── Se não enviou imagem de destaque, usa a 1ª da galeria ─
+            if (!imagemUrl && galeriaUrls.length > 0) {
+                imagemUrl = galeriaUrls[0];
+            }
+
             // ── Salva no Firestore ───────────────────────────────────
             btn.innerHTML = 'Salvando…';
             const data = {

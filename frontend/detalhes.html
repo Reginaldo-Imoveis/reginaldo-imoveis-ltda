@@ -186,7 +186,9 @@
                 const statusHtml = (imovel.status && imovel.status !== 'Disponível')
                     ? `<span class="badge-status ${statusClass}" style="position: relative; top: auto; right: auto; display: inline-block; vertical-align: middle; margin-left: 14px;">${imovel.status}</span>` : '';
 
-                const imgUrl = imovel.imagem || 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1600&auto=format';
+                const imgUrl = imovel.imagem
+                    || (Array.isArray(imovel.galeria) && imovel.galeria[0])
+                    || 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1600&auto=format';
                 const finalidade = imovel.finalidade || 'Venda';
                 const precoLabel = finalidade === 'Locação' ? 'Aluguel mensal' : 'Valor de venda';
 

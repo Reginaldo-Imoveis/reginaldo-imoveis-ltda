@@ -858,8 +858,12 @@
 
     </main>
 
-    <script>
-    const API_LEADS_URL = '/api/leads';
+    <script type="module">
+    import { db } from './firebase-config.js';
+    import { collection, addDoc, serverTimestamp }
+        from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
+
+    const HIGH_TICKET_THRESHOLD = 1500000; // R$1,5M
 
     // ---- RANGE SLIDER ----
     const rangeInput   = document.getElementById('preco');
@@ -948,20 +952,18 @@
         const precoNum = parseInt(rangeInput.value) || 0;
 
         try {
-            const resp = await fetch(API_LEADS_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    nome,
-                    telefone,
-                    tipo_imovel: tipo,
-                    quartos,
-                    vagas,
-                    faixa_preco: precoNum
-                })
+            await addDoc(collection(db, 'leads'), {
+                nome,
+                telefone,
+                tipo_imovel:   tipo,
+                quartos,
+                vagas,
+                faixa_preco:   precoNum,
+                classificacao: precoNum >= HIGH_TICKET_THRESHOLD ? 'High Ticket' : 'Normal',
+                status:        'novo',
+                origem:        'captacao',
+                criado_em:     serverTimestamp()
             });
-
-            if (!resp.ok) throw new Error('Erro ao enviar');
 
             setLoading(false);
             showSuccess();
