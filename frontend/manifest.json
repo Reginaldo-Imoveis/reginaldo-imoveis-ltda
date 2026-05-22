@@ -1,15 +1,21 @@
 {
   "name": "Reginaldo Imóveis",
-  "short_name": "Reginaldo",
-  "description": "Curadoria de imóveis de alto padrão em São Paulo. CRECI 17407-J.",
+  "short_name": "RI Imóveis",
+  "description": "Imobiliária especializada em venda e locação de imóveis de alto padrão em São Paulo. CRECI 17407-J.",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
-  "background_color": "#0D0D14",
-  "theme_color": "#C4A26B",
+  "background_color": "#6B1622",
+  "theme_color": "#6B1622",
   "orientation": "portrait-primary",
+  "lang": "pt-BR",
   "icons": [
-    { "src": "/img/icon-192.png", "sizes": "192x192", "type": "image/png" },
-    { "src": "/img/icon-512.png", "sizes": "512x512", "type": "image/png" }
+    { "src": "/img/favicon-16x16.png",         "sizes": "16x16",   "type": "image/png" },
+    { "src": "/img/favicon-32x32.png",         "sizes": "32x32",   "type": "image/png" },
+    { "src": "/img/apple-touch-icon.png",       "sizes": "180x180", "type": "image/png" },
+    { "src": "/img/android-chrome-192x192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/img/android-chrome-512x512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
   ],
-  "categories": ["business", "lifestyle"]
+  "categories": ["business", "lifestyle"],
+  "screenshots": []
 }
