@@ -29,6 +29,9 @@ function initMobileMenu() {
     const nav = document.querySelector('.nav-links');
     if (!btn || !nav) return;
 
+    // Define estado inicial para screen readers
+    btn.setAttribute('aria-expanded', 'false');
+
     const closeMenu = () => {
         nav.classList.remove('open');
         btn.setAttribute('aria-expanded', 'false');

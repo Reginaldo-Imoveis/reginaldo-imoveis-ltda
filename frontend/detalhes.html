@@ -219,7 +219,7 @@
                     "name": imovel.titulo,
                     "description": imovel.descricao || descSeo,
                     "url": pageUrl,
-                    "datePosted": imovel.createdAt || new Date().toISOString(),
+                    "datePosted": imovel.createdAt?.toDate?.()?.toISOString() || new Date().toISOString(),
                     "image": imgAbsolute,
                     "offers": {
                         "@type": "Offer",
@@ -653,15 +653,19 @@
                             setTimeout(() => { lbImg.src = allImgs[lbCur]; lbImg.style.opacity = '1'; }, 180);
                         };
 
-                        closeBtn.addEventListener('click', () => lb.remove());
+                        const closeLightbox = () => {
+                            lb.remove();
+                            document.removeEventListener('keydown', kbHandler);
+                        };
+                        closeBtn.addEventListener('click', closeLightbox);
                         lbPrev.addEventListener('click', e => { e.stopPropagation(); lbGo(lbCur - 1); });
                         lbNext.addEventListener('click', e => { e.stopPropagation(); lbGo(lbCur + 1); });
-                        lb.addEventListener('click', e => { if (e.target === lb) lb.remove(); });
+                        lb.addEventListener('click', e => { if (e.target === lb) closeLightbox(); });
 
                         const kbHandler = e => {
                             if (e.key === 'ArrowLeft') lbGo(lbCur - 1);
                             if (e.key === 'ArrowRight') lbGo(lbCur + 1);
-                            if (e.key === 'Escape') { lb.remove(); document.removeEventListener('keydown', kbHandler); }
+                            if (e.key === 'Escape') closeLightbox();
                         };
                         document.addEventListener('keydown', kbHandler);
                     });

@@ -260,7 +260,7 @@
                 </div>
             </div>
             <div class="footer-bottom">
-                <span>&copy; 1998 Reginaldo Imóveis. Todos os direitos reservados.</span>
+                <span>&copy; 1998–<span id="footer-year"></span> Reginaldo Imóveis. Todos os direitos reservados.</span>
                 <span>Desenvolvido com cuidado em São Paulo.</span>
             </div>
         </div>
@@ -277,15 +277,39 @@
     </div>
 
     <script>
-        // Header scroll behavior
+        // Header scroll behavior — RAF-throttled (consistente com index.html)
         document.addEventListener('DOMContentLoaded', () => {
             const header = document.getElementById('site-header');
+            let _hTick = false;
             const onScroll = () => {
-                if (window.scrollY > 30) header.classList.add('scrolled');
-                else header.classList.remove('scrolled');
+                if (_hTick) return;
+                _hTick = true;
+                requestAnimationFrame(() => {
+                    header.classList.toggle('scrolled', window.scrollY > 30);
+                    _hTick = false;
+                });
             };
             window.addEventListener('scroll', onScroll, { passive: true });
             onScroll();
+
+            // Mobile menu
+            const menuBtn = document.querySelector('.mobile-menu-btn');
+            const navLinks = document.querySelector('.nav-links');
+            if (menuBtn && navLinks) {
+                menuBtn.setAttribute('aria-expanded', 'false');
+                const closeMenu = () => {
+                    navLinks.classList.remove('open');
+                    menuBtn.setAttribute('aria-expanded', 'false');
+                };
+                menuBtn.addEventListener('click', () => {
+                    navLinks.classList.toggle('open');
+                    menuBtn.setAttribute('aria-expanded', String(navLinks.classList.contains('open')));
+                });
+                navLinks.querySelectorAll('a').forEach(link => link.addEventListener('click', closeMenu));
+                document.addEventListener('click', (e) => {
+                    if (!menuBtn.contains(e.target) && !navLinks.contains(e.target)) closeMenu();
+                });
+            }
         });
 
         // LGPD
@@ -304,6 +328,7 @@
             });
         })();
     </script>
+    <script>document.getElementById('footer-year').textContent = new Date().getFullYear();</script>
     <script src="js/tracker.js" defer></script>
     <script type="module">
         // ── Contato form — Firebase Firestore ────────────────
