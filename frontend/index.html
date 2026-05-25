@@ -1,10 +1,28 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Reginaldo Imóveis | Imóveis de Alto Padrão em São Paulo</title>
     <meta name="description" content="Reginaldo Imóveis — Curadoria exclusiva de imóveis de alto padrão em São Paulo. Atendimento personalizado e negócios com segurança total. CRECI 17407-J.">
+
+    <!-- SEO essencial -->
+    <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
+    <meta name="author" content="Reginaldo Imóveis">
+    <meta name="keywords" content="imóveis São Paulo, apartamentos à venda São Paulo, casas à venda São Paulo, imobiliária São Paulo, imóveis alto padrão, comprar apartamento SP, alugar imóvel São Paulo, Reginaldo Imóveis, CRECI 17407-J, Vila Regente Feijó">
+    <meta name="rating" content="general">
+    <meta name="revisit-after" content="7 days">
+
+    <!-- Identidade da aplicação (Edge, Chrome, Safari) -->
+    <meta name="application-name" content="Reginaldo Imóveis">
+    <meta name="apple-mobile-web-app-title" content="Reginaldo Imóveis">
+
+    <!-- Geo / Local SEO -->
+    <meta name="geo.region" content="BR-SP">
+    <meta name="geo.placename" content="São Paulo, SP, Brasil">
+    <meta name="geo.position" content="-23.5761;-46.5684">
+    <meta name="ICBM" content="-23.5761, -46.5684">
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <!-- Favicon -->
@@ -15,18 +33,26 @@
     <link rel="apple-touch-icon" sizes="180x180" href="img/apple-touch-icon.png">
     <link rel="stylesheet" href="css/style.css?v=15">
 
-    <!-- Schema.org — RealEstateAgent (SEO) -->
+    <!-- Schema.org — RealEstateAgent + LocalBusiness -->
     <script type="application/ld+json">
     {
         "@context": "https://schema.org",
-        "@type": "RealEstateAgent",
+        "@type": ["RealEstateAgent", "LocalBusiness"],
+        "@id": "https://www.reginaldoimoveisltda.com.br/#organization",
         "name": "Reginaldo Imóveis",
+        "legalName": "Reginaldo Imóveis Ltda",
         "url": "https://www.reginaldoimoveisltda.com.br",
-        "logo": "https://www.reginaldoimoveisltda.com.br/img/favicon.svg",
+        "logo": {
+            "@type": "ImageObject",
+            "url": "https://www.reginaldoimoveisltda.com.br/img/og-image.png",
+            "width": 1200,
+            "height": 630
+        },
         "image": "https://www.reginaldoimoveisltda.com.br/img/og-image.png",
-        "description": "Curadoria exclusiva de imóveis de alto padrão em São Paulo. Atendimento personalizado e negócios com segurança total. CRECI 17407-J.",
+        "description": "Imobiliária especializada em curadoria de imóveis de alto padrão em São Paulo. Mais de 28 anos de experiência no mercado paulistano. Atendimento personalizado do primeiro contato à chave na mão. CRECI 17407-J.",
         "telephone": "+55-11-95328-0353",
         "email": "reginaldoimoveisltda@gmail.com",
+        "foundingYear": 1998,
         "address": {
             "@type": "PostalAddress",
             "streetAddress": "Av. Sapopemba, 3320",
@@ -37,9 +63,10 @@
         },
         "geo": {
             "@type": "GeoCoordinates",
-            "latitude": "-23.5761",
-            "longitude": "-46.5684"
+            "latitude": -23.5761,
+            "longitude": -46.5684
         },
+        "hasMap": "https://maps.google.com/?q=Av.+Sapopemba,+3320,+São+Paulo,+SP",
         "openingHoursSpecification": [
             {
                 "@type": "OpeningHoursSpecification",
@@ -49,15 +76,33 @@
             }
         ],
         "priceRange": "$$$$",
-        "areaServed": {
-            "@type": "City",
-            "name": "São Paulo"
-        },
+        "currenciesAccepted": "BRL",
+        "paymentAccepted": "Cash, Credit Card, Financing",
+        "areaServed": [
+            { "@type": "City", "name": "São Paulo" },
+            { "@type": "State", "name": "São Paulo" }
+        ],
+        "knowsAbout": ["Imóveis residenciais", "Imóveis comerciais", "Financiamento imobiliário", "Avaliação de imóveis"],
         "sameAs": [
             "https://www.instagram.com/imoveisreginaldo",
-            "https://wa.me/5511953280353",
-            "https://www.reginaldoimoveisltda.com.br"
+            "https://wa.me/5511953280353"
         ]
+    }
+    </script>
+
+    <!-- Schema.org — WebSite (habilita Sitelinks Search Box no Google) -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "@id": "https://www.reginaldoimoveisltda.com.br/#website",
+        "name": "Reginaldo Imóveis",
+        "url": "https://www.reginaldoimoveisltda.com.br",
+        "description": "Curadoria exclusiva de imóveis de alto padrão em São Paulo.",
+        "inLanguage": "pt-BR",
+        "publisher": {
+            "@id": "https://www.reginaldoimoveisltda.com.br/#organization"
+        }
     }
     </script>
 
@@ -89,9 +134,10 @@
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#6B1622">
     <meta name="msapplication-TileColor" content="#6B1622">
-    <meta name="msapplication-TileImage" content="img/android-chrome-192x192.png">
+    <meta name="msapplication-TileImage" content="https://www.reginaldoimoveisltda.com.br/img/android-chrome-192x192.png">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="mobile-web-app-capable" content="yes">
 
     <!-- Performance: pré-conectar CDN de imagens -->
     <link rel="dns-prefetch" href="https://images.unsplash.com">

@@ -3,19 +3,83 @@
   "short_name": "RI Imóveis",
   "description": "Imobiliária especializada em venda e locação de imóveis de alto padrão em São Paulo. CRECI 17407-J.",
   "start_url": "/",
+  "id": "/",
   "scope": "/",
   "display": "standalone",
-  "background_color": "#6B1622",
+  "display_override": ["standalone", "minimal-ui", "browser"],
+  "background_color": "#0A0A0B",
   "theme_color": "#6B1622",
   "orientation": "portrait-primary",
   "lang": "pt-BR",
-  "icons": [
-    { "src": "/img/favicon-16x16.png",         "sizes": "16x16",   "type": "image/png" },
-    { "src": "/img/favicon-32x32.png",         "sizes": "32x32",   "type": "image/png" },
-    { "src": "/img/apple-touch-icon.png",       "sizes": "180x180", "type": "image/png" },
-    { "src": "/img/android-chrome-192x192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
-    { "src": "/img/android-chrome-512x512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
-  ],
+  "dir": "ltr",
   "categories": ["business", "lifestyle"],
+  "prefer_related_applications": false,
+  "icons": [
+    {
+      "src": "/img/favicon-16x16.png",
+      "sizes": "16x16",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/img/favicon-32x32.png",
+      "sizes": "32x32",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/img/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/img/android-chrome-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/img/android-chrome-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/img/android-chrome-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/img/android-chrome-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Ver Imóveis",
+      "short_name": "Imóveis",
+      "description": "Explorar imóveis disponíveis",
+      "url": "/#imoveis",
+      "icons": [{ "src": "/img/android-chrome-192x192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Falar no WhatsApp",
+      "short_name": "WhatsApp",
+      "description": "Falar com um especialista",
+      "url": "https://wa.me/5511953280353",
+      "icons": [{ "src": "/img/android-chrome-192x192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Encontre seu Imóvel",
+      "short_name": "Captação",
+      "description": "Preencher perfil de comprador",
+      "url": "/captacao.html",
+      "icons": [{ "src": "/img/android-chrome-192x192.png", "sizes": "192x192" }]
+    }
+  ],
   "screenshots": []
 }
