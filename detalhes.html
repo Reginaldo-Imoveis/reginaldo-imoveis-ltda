@@ -219,7 +219,7 @@
                     "name": imovel.titulo,
                     "description": imovel.descricao || descSeo,
                     "url": pageUrl,
-                    "datePosted": imovel.createdAt || new Date().toISOString(),
+                    "datePosted": imovel.createdAt?.toDate?.()?.toISOString() || new Date().toISOString(),
                     "image": imgAbsolute,
                     "offers": {
                         "@type": "Offer",
@@ -653,15 +653,19 @@
                             setTimeout(() => { lbImg.src = allImgs[lbCur]; lbImg.style.opacity = '1'; }, 180);
                         };
 
-                        closeBtn.addEventListener('click', () => lb.remove());
+                        const closeLightbox = () => {
+                            lb.remove();
+                            document.removeEventListener('keydown', kbHandler);
+                        };
+                        closeBtn.addEventListener('click', closeLightbox);
                         lbPrev.addEventListener('click', e => { e.stopPropagation(); lbGo(lbCur - 1); });
                         lbNext.addEventListener('click', e => { e.stopPropagation(); lbGo(lbCur + 1); });
-                        lb.addEventListener('click', e => { if (e.target === lb) lb.remove(); });
+                        lb.addEventListener('click', e => { if (e.target === lb) closeLightbox(); });
 
                         const kbHandler = e => {
                             if (e.key === 'ArrowLeft') lbGo(lbCur - 1);
                             if (e.key === 'ArrowRight') lbGo(lbCur + 1);
-                            if (e.key === 'Escape') { lb.remove(); document.removeEventListener('keydown', kbHandler); }
+                            if (e.key === 'Escape') closeLightbox();
                         };
                         document.addEventListener('keydown', kbHandler);
                     });
@@ -684,11 +688,17 @@
                 }
 
                 // Compartilhar imóvel
+                // A URL de compartilhamento aponta para a Cloud Function de OG proxy,
+                // que retorna as meta tags corretas para WhatsApp/Facebook antes de
+                // redirecionar o usuário para a página real.
+                const CF_SHARE_BASE = 'https://southamerica-east1-reginaldo-imoveis.cloudfunctions.net/imovel';
+                const shareProxyUrl = `${CF_SHARE_BASE}?id=${encodeURIComponent(id)}`;
+
                 document.getElementById('btn-compartilhar')?.addEventListener('click', async () => {
                     const shareData = {
                         title: imovel.titulo + ' | Reginaldo Imóveis',
                         text: `Confira este imóvel: ${imovel.titulo} — ${preco}`,
-                        url: window.location.href
+                        url: shareProxyUrl,
                     };
 
                     if (navigator.share) {
@@ -698,7 +708,7 @@
                             if (err.name !== 'AbortError') console.error(err);
                         }
                     } else {
-                        await navigator.clipboard.writeText(window.location.href);
+                        await navigator.clipboard.writeText(shareProxyUrl);
                         const btn = document.getElementById('btn-compartilhar');
                         const original = btn.innerHTML;
                         btn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Link copiado!';

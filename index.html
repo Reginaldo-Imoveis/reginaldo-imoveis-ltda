@@ -44,7 +44,7 @@
             {
                 "@type": "OpeningHoursSpecification",
                 "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
-                "opens": "09:00",
+                "opens": "08:30",
                 "closes": "17:30"
             }
         ],
@@ -169,6 +169,7 @@
                         <option value="Apartamento">Apartamento</option>
                         <option value="Casa">Casa</option>
                         <option value="Sobrado">Sobrado</option>
+                        <option value="Terreno">Terreno</option>
                         <option value="Comercial">Comercial</option>
                         <option value="Cobertura">Cobertura</option>
                     </select>
@@ -262,8 +263,10 @@
                         <button class="chip active" data-tipo="todos">Todos</button>
                         <button class="chip" data-tipo="Apartamento">Apartamento</button>
                         <button class="chip" data-tipo="Casa">Casa</button>
+                        <button class="chip" data-tipo="Sobrado">Sobrado</button>
                         <button class="chip" data-tipo="Cobertura">Cobertura</button>
                         <button class="chip" data-tipo="Comercial">Comercial</button>
+                        <button class="chip" data-tipo="Terreno">Terreno</button>
                     </div>
                 </div>
                 <a href="contato.html" class="btn btn-ghost btn-sm">
@@ -612,7 +615,7 @@
                 </div>
             </div>
             <div class="footer-bottom">
-                <span>&copy; 1998 Reginaldo Imóveis. Todos os direitos reservados.</span>
+                <span>&copy; 1998–<span id="footer-year"></span> Reginaldo Imóveis. Todos os direitos reservados.</span>
                 <span>Desenvolvido com cuidado em São Paulo.</span>
             </div>
         </div>
@@ -628,6 +631,7 @@
         </div>
     </div>
 
+    <script>document.getElementById('footer-year').textContent = new Date().getFullYear();</script>
     <script src="js/tracker.js?v=3" defer></script>
     <script type="module" src="js/main.js?v=17"></script>
     <script>if('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');</script>
