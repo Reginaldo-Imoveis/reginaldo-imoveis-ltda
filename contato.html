@@ -1,10 +1,17 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Contato | Reginaldo Imóveis</title>
     <meta name="description" content="Entre em contato com Reginaldo Imóveis. Atendimento personalizado para compra, venda e locação de imóveis de alto padrão em São Paulo. CRECI 17407-J.">
+    <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large">
+    <meta name="author" content="Reginaldo Imóveis">
+    <meta name="keywords" content="contato imobiliária São Paulo, Reginaldo Imóveis telefone, falar com corretor SP, agendar visita imóvel São Paulo, imobiliária CRECI 17407-J">
+    <meta name="geo.region" content="BR-SP">
+    <meta name="geo.placename" content="São Paulo, SP, Brasil">
+    <meta name="application-name" content="Reginaldo Imóveis">
+    <meta name="apple-mobile-web-app-title" content="Reginaldo Imóveis">
     <link rel="canonical" href="https://www.reginaldoimoveisltda.com.br/contato.html">
 
     <!-- Open Graph -->
@@ -34,6 +41,12 @@
     <link rel="shortcut icon" href="img/favicon.ico">
     <link rel="apple-touch-icon" sizes="180x180" href="img/apple-touch-icon.png">
     <meta name="theme-color" content="#6B1622">
+    <meta name="msapplication-TileColor" content="#6B1622">
+    <meta name="msapplication-TileImage" content="https://www.reginaldoimoveisltda.com.br/img/android-chrome-192x192.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="mobile-web-app-capable" content="yes">
+    <link rel="manifest" href="manifest.json">
     <link rel="stylesheet" href="css/style.css?v=15">
 
     <!-- Google Analytics 4 — Substitua G-XXXXXXXXXX pelo seu Measurement ID -->
@@ -42,30 +55,63 @@
     <!-- Microsoft Clarity — Substitua XXXXXXXXXX pelo seu Project ID -->
     <script>(function(c,l,a,r,i,t,y){c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y)})(window,document,"clarity","script","XXXXXXXXXX")</script>
 
+    <!-- Schema.org — ContactPage -->
     <script type="application/ld+json">
     {
         "@context": "https://schema.org",
-        "@type": "RealEstateAgent",
-        "name": "Reginaldo Imóveis",
-        "url": "https://www.reginaldoimoveisltda.com.br",
-        "telephone": "+55-11-95328-0353",
-        "email": "reginaldoimoveisltda@gmail.com",
-        "address": {
-            "@type": "PostalAddress",
-            "streetAddress": "Av. Sapopemba, 3320",
-            "addressLocality": "São Paulo",
-            "addressRegion": "SP",
-            "postalCode": "03345-000",
-            "addressCountry": "BR"
+        "@type": "ContactPage",
+        "name": "Contato — Reginaldo Imóveis",
+        "url": "https://www.reginaldoimoveisltda.com.br/contato.html",
+        "description": "Entre em contato com a equipe da Reginaldo Imóveis para compra, venda ou locação de imóveis de alto padrão em São Paulo.",
+        "inLanguage": "pt-BR",
+        "breadcrumb": {
+            "@type": "BreadcrumbList",
+            "itemListElement": [
+                { "@type": "ListItem", "position": 1, "name": "Início", "item": "https://www.reginaldoimoveisltda.com.br/" },
+                { "@type": "ListItem", "position": 2, "name": "Contato", "item": "https://www.reginaldoimoveisltda.com.br/contato.html" }
+            ]
         },
-        "openingHoursSpecification": [
-            {
-                "@type": "OpeningHoursSpecification",
-                "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
-                "opens": "08:30",
-                "closes": "17:30"
+        "mainEntity": {
+            "@type": ["RealEstateAgent", "LocalBusiness"],
+            "@id": "https://www.reginaldoimoveisltda.com.br/#organization",
+            "name": "Reginaldo Imóveis",
+            "legalName": "Reginaldo Imóveis Ltda",
+            "url": "https://www.reginaldoimoveisltda.com.br",
+            "telephone": "+55-11-95328-0353",
+            "email": "reginaldoimoveisltda@gmail.com",
+            "foundingYear": 1998,
+            "image": "https://www.reginaldoimoveisltda.com.br/img/og-image.png",
+            "address": {
+                "@type": "PostalAddress",
+                "streetAddress": "Av. Sapopemba, 3320",
+                "addressLocality": "São Paulo",
+                "addressRegion": "SP",
+                "postalCode": "03345-000",
+                "addressCountry": "BR"
+            },
+            "geo": {
+                "@type": "GeoCoordinates",
+                "latitude": -23.5761,
+                "longitude": -46.5684
+            },
+            "hasMap": "https://maps.google.com/?q=Av.+Sapopemba,+3320,+São+Paulo,+SP",
+            "openingHoursSpecification": [
+                {
+                    "@type": "OpeningHoursSpecification",
+                    "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+                    "opens": "08:30",
+                    "closes": "17:30"
+                }
+            ],
+            "contactPoint": {
+                "@type": "ContactPoint",
+                "telephone": "+55-11-95328-0353",
+                "contactType": "sales",
+                "availableLanguage": "Portuguese",
+                "areaServed": "BR",
+                "contactOption": "TollFree"
             }
-        ]
+        }
     }
     </script>
 </head>

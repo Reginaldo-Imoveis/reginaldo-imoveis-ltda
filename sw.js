@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ri-shell-v5';
+const CACHE_NAME = 'ri-shell-v6';
 const SHELL_ASSETS = [
     '/',
     '/css/style.css?v=15',
@@ -29,6 +29,8 @@ self.addEventListener('fetch', (e) => {
     if (e.request.method !== 'GET') return;
     if (url.pathname.startsWith('/api/')) return;
     if (url.pathname.startsWith('/admin')) return;
+    // Nunca cachear arquivos para crawlers — devem sempre vir da rede
+    if (url.pathname === '/sitemap.xml' || url.pathname === '/robots.txt') return;
 
     // Não interceptar URLs externas — deixa o browser lidar com elas diretamente
     if (url.origin !== self.location.origin) return;
