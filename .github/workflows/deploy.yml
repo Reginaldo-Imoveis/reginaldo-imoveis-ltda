@@ -4,13 +4,16 @@ on:
   push:
     branches: [main]
 
+# Permissões no nível do workflow — obrigatório para o GITHUB_TOKEN
+# poder fazer push na branch gh-pages
+permissions:
+  contents: write
+
 jobs:
   # ── 1. GitHub Pages (site estático) ────────────────────────
   deploy-pages:
     name: GitHub Pages
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
     steps:
       - uses: actions/checkout@v4
 
@@ -19,6 +22,8 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./frontend
+          force_orphan: false
+          exclude_assets: 'dist'
 
   # ── 2. Firebase Cloud Functions (OG proxy WhatsApp) ────────
   deploy-functions:
