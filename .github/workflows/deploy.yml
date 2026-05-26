@@ -4,11 +4,6 @@ on:
   push:
     branches: [main]
 
-# Permissões no nível do workflow — obrigatório para o GITHUB_TOKEN
-# poder fazer push na branch gh-pages
-permissions:
-  contents: write
-
 jobs:
   # ── 1. GitHub Pages (site estático) ────────────────────────
   deploy-pages:
@@ -20,7 +15,9 @@ jobs:
       - name: Publicar pasta frontend no GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          # Usa PAT pessoal para contornar política de permissão da organização.
+          # Secret DEPLOY_TOKEN: github.com/settings/tokens → escopo "repo"
+          personal_token: ${{ secrets.DEPLOY_TOKEN }}
           publish_dir: ./frontend
           force_orphan: false
           exclude_assets: 'dist'
