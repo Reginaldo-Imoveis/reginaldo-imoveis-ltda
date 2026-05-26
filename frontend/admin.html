@@ -446,9 +446,12 @@
                             <div id="preview-galeria" class="galeria-preview"></div>
                         </div>
                         <div class="form-group full">
-                            <label class="form-label">Endereço (Google Maps)</label>
-                            <input type="url" id="mapa_url" class="form-control" placeholder="https://maps.google.com/...">
-                            <small style="color: var(--c-text-mute);">Cole o link do Google Maps · Opcional</small>
+                            <label class="form-label">Localização no Google Maps <span style="font-weight:400;color:var(--c-text-mute);">· Opcional</span></label>
+                            <input type="text" id="mapa_url" class="form-control" placeholder="Cole o link do Google Maps ou digite o endereço">
+                            <small style="color: var(--c-text-mute); line-height: 1.5;">
+                                Aceita: link copiado do Google Maps, URL de embed, ou endereço digitado.<br>
+                                <strong style="color:var(--c-text-mute);">Dica:</strong> No Google Maps, clique em <em>Compartilhar → Copiar link</em>.
+                            </small>
                         </div>
                         <div class="form-group full">
                             <label class="form-label">Descrição completa</label>

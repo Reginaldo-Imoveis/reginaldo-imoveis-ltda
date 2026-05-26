@@ -371,6 +371,48 @@
 
                     : '<div class="simulador-card">' + _vendaSimulador + '</div>';
 
+                // ── Converte qualquer URL do Google Maps para formato embed ──
+                function toEmbedUrl(raw) {
+                    if (!raw || typeof raw !== 'string') return '';
+                    const url = raw.trim();
+                    if (!url) return '';
+
+                    // 1. Já é URL de embed — retorna direto
+                    if (url.includes('google.com/maps/embed')) return url;
+                    if (url.includes('output=embed')) return url;
+
+                    // 2. URL com coordenadas /@lat,lng
+                    const coordMatch = url.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
+                    if (coordMatch) {
+                        return `https://maps.google.com/maps?q=${coordMatch[1]},${coordMatch[2]}&z=16&output=embed&hl=pt-BR`;
+                    }
+
+                    try {
+                        const u = new URL(url);
+
+                        // 3. Parâmetro ?q= explícito
+                        const q = u.searchParams.get('q');
+                        if (q) return `https://maps.google.com/maps?q=${encodeURIComponent(q)}&output=embed&hl=pt-BR`;
+
+                        // 4. Segmento /place/NOME/ no path
+                        const pathMatch = u.pathname.match(/\/place\/([^/@?+]+)/);
+                        if (pathMatch && pathMatch[1]) {
+                            const place = decodeURIComponent(pathMatch[1]).replace(/\+/g, ' ');
+                            return `https://maps.google.com/maps?q=${encodeURIComponent(place)}&output=embed&hl=pt-BR`;
+                        }
+                    } catch (_) { /* URL malformada */ }
+
+                    // 5. Texto puro (endereço digitado) — trata como query
+                    if (!url.startsWith('http')) {
+                        return `https://maps.google.com/maps?q=${encodeURIComponent(url)}&output=embed&hl=pt-BR`;
+                    }
+
+                    // 6. URL curta (goo.gl/maps) ou formato desconhecido — retorna vazio
+                    return '';
+                }
+
+                const mapaEmbedUrl = toEmbedUrl(imovel.mapa_url || '');
+
                 container.innerHTML = `
                     <nav class="breadcrumb">
                         <a href="index.html">Início</a>
@@ -432,9 +474,25 @@
                             ${imovel.mapa_url ? `
                             <div class="detalhes-section">
                                 <h2>Localização</h2>
+                                ${mapaEmbedUrl ? `
                                 <div style="border-radius: var(--radius-lg); overflow: hidden; border: 1px solid var(--c-line);">
-                                    <iframe src="${imovel.mapa_url}" width="100%" height="320" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
-                                </div>
+                                    <iframe
+                                        src="${mapaEmbedUrl}"
+                                        width="100%"
+                                        height="320"
+                                        style="border:0;"
+                                        allowfullscreen=""
+                                        loading="lazy"
+                                        referrerpolicy="no-referrer-when-downgrade"
+                                        title="Localização do imóvel no Google Maps"
+                                        aria-label="Mapa com a localização do imóvel"
+                                    ></iframe>
+                                </div>` : `
+                                <div style="border-radius: var(--radius-lg); border: 1px solid var(--c-line); padding: 32px 16px; text-align: center; color: var(--c-text-mute); background: var(--c-surface);">
+                                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-bottom:12px;opacity:0.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                                    <p style="margin:0;font-size:0.875rem;">Não foi possível carregar o mapa.<br>
+                                    <a href="${imovel.mapa_url}" target="_blank" rel="noopener noreferrer" style="color:var(--c-gold);">Ver no Google Maps</a></p>
+                                </div>`}
                             </div>` : ''}
                         </div>
 
