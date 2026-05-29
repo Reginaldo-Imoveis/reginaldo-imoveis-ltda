@@ -27,24 +27,28 @@ jobs:
   deploy-functions:
     name: Firebase Functions
     runs-on: ubuntu-latest
-    # Só executa se o secret FIREBASE_TOKEN existir
-    # (permite o site funcionar mesmo sem as functions configuradas)
-    if: ${{ secrets.FIREBASE_TOKEN != '' }}
+    # Mapeia o secret para env: o contexto `secrets` não pode ser usado em
+    # condições `if`. Os steps abaixo só rodam se FIREBASE_TOKEN estiver setado,
+    # permitindo o site funcionar mesmo sem as functions configuradas.
+    env:
+      FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        if: ${{ env.FIREBASE_TOKEN != '' }}
+        uses: actions/checkout@v4
 
       - name: Setup Node.js 20
+        if: ${{ env.FIREBASE_TOKEN != '' }}
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: functions/package.json
 
       - name: Instalar dependências das functions
-        run: npm ci
+        if: ${{ env.FIREBASE_TOKEN != '' }}
+        run: npm install
         working-directory: functions
 
       - name: Deploy Firebase Functions
+        if: ${{ env.FIREBASE_TOKEN != '' }}
         run: npx firebase-tools deploy --only functions --non-interactive
-        env:
-          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+        working-directory: functions
