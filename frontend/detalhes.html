@@ -33,6 +33,7 @@
     <meta name="twitter:title" content="Imóvel | Reginaldo Imóveis">
     <meta name="twitter:description" content="Imóvel de alto padrão em São Paulo. CRECI 17407-J.">
     <meta name="twitter:image" content="https://www.reginaldoimoveisltda.com.br/img/og-image.png">
+    <meta name="twitter:image:alt" content="Imóvel | Reginaldo Imóveis">
 
     <!-- Canonical — atualizado via JS -->
     <link rel="canonical" href="https://www.reginaldoimoveisltda.com.br/detalhes.html">
@@ -219,10 +220,30 @@
                                       : 'Valor de venda';
 
                 const pageUrl = window.location.href;
-                const descSeo = imovel.descricao
-                    ? imovel.descricao.substring(0, 160)
-                    : `${imovel.tipo} de alto padrão em São Paulo — ${preco}`;
+
+                // ── Descrição inteligente para compartilhamento/SEO ──
+                // Mesma lógica do OG proxy (functions/index.js) para manter
+                // o preview consistente entre bots sociais e Google.
+                const _prepFinalidade = (f) => {
+                    const s = String(f || 'Venda').toLowerCase();
+                    const v = s.includes('venda'), l = s.includes('loca');
+                    if (v && l) return 'à venda e para locação';
+                    if (l) return 'para locação';
+                    return 'à venda';
+                };
+                const _juntarPt = (a) => a.length <= 1 ? (a[0] || '') : a.slice(0, -1).join(', ') + ' e ' + a[a.length - 1];
+                const _plural = (n, sing, plur) => `${n} ${n === 1 ? sing : plur}`;
+                const _specs = [];
+                if (imovel.quartos > 0) _specs.push(_plural(imovel.quartos, 'quarto', 'quartos'));
+                if (imovel.suites > 0)  _specs.push(_plural(imovel.suites, 'suíte', 'suítes'));
+                if (imovel.vagas > 0)   _specs.push(_plural(imovel.vagas, 'vaga', 'vagas'));
+                const _local    = imovel.bairro ? `${imovel.bairro}, São Paulo` : 'São Paulo';
+                const _comSpecs = _specs.length ? ` com ${_juntarPt(_specs)}` : '';
+                const _area     = imovel.areaUtil > 0 ? ` (${imovel.areaUtil}m²)` : '';
+                const descSeo   = `${imovel.tipo || 'Imóvel'} ${_prepFinalidade(finalidade)}${_comSpecs} em ${_local}${_area}. Confira fotos, detalhes e condições no site da Reginaldo Imóveis.`;
+
                 const imgAbsolute = imgUrl.startsWith('http') ? imgUrl : window.location.origin + imgUrl;
+                const imgAlt = `${imovel.titulo} — Reginaldo Imóveis`;
 
                 // ── Schema.org JSON-LD: RealEstateListing ──
                 const schemaListing = {
@@ -307,6 +328,7 @@
                     'og:title': `${imovel.titulo} — ${preco}`,
                     'og:description': descSeo,
                     'og:image': imgAbsolute,
+                    'og:image:alt': imgAlt,
                     'og:url': pageUrl,
                     'product:price:amount': String(imovel.preco),
                 };
@@ -320,6 +342,7 @@
                     'twitter:title': `${imovel.titulo} — ${preco}`,
                     'twitter:description': descSeo,
                     'twitter:image': imgAbsolute,
+                    'twitter:image:alt': imgAlt,
                 };
                 Object.entries(twMap).forEach(([name, val]) => {
                     const tag = document.querySelector(`meta[name="${name}"]`);
