@@ -165,7 +165,7 @@ exports.imovel = functions
   <link rel="canonical" href="${esc(realUrl)}">
 
   <!-- ── Open Graph (WhatsApp · Facebook · Telegram · LinkedIn · iMessage) ── -->
-  <meta property="og:type"            content="website">
+  <meta property="og:type"            content="product">
   <meta property="og:site_name"       content="Reginaldo Imóveis">
   <meta property="og:locale"          content="pt_BR">
   <meta property="og:title"           content="${esc(titulo)}">
