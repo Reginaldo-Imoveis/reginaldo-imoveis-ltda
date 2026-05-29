@@ -3360,6 +3360,10 @@ select.cap-form-control option { background: #1A1A22; color: #EDEDEF; }
   .sobre-wrap { grid-template-columns: 1fr; gap: 60px; }
   .stats-quad { max-width: 520px; }
   .detalhes-grid { grid-template-columns: 1fr; }
+  /* Grid items mantêm min-width:auto por padrão e não encolhem abaixo do
+     conteúdo (ex.: .preco-label com letter-spacing largo), empurrando o card
+     para fora da tela. min-width:0 faz o conteúdo respeitar a coluna 1fr. */
+  .detalhes-grid > * { min-width: 0; }
   .caracteristicas-grid { grid-template-columns: repeat(3, 1fr); }
   .contato-wrapper { grid-template-columns: 1fr; }
   .footer-grid { grid-template-columns: 1fr 1fr; gap: 40px; }
